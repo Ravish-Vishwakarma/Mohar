@@ -257,7 +257,7 @@ function App() {
       dailyMap[fullDate] = { date: d, income: 0, expense: 0 };
     }
 
-    transactions.forEach(t => {
+    filteredTransactions.forEach(t => {
       if (dailyMap[t.date]) {
         if (t.type === "income") dailyMap[t.date].income += t.amount;
         else dailyMap[t.date].expense += t.amount;
@@ -265,7 +265,7 @@ function App() {
     });
 
     return Object.values(dailyMap);
-  }, [transactions]);
+  }, [filteredTransactions]);
 
   const categorySpending = useMemo(() => {
     const catMap: Record<string, number> = {};
