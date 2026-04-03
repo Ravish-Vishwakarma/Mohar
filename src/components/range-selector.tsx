@@ -5,9 +5,10 @@ export type RangeType = "day" | "week" | "month" | "year" | "all-time";
 interface RangeSelectorProps {
   selectedRange: RangeType;
   onRangeChange: (range: RangeType) => void;
+  disabled?: boolean;
 }
 
-export function RangeSelector({ selectedRange, onRangeChange }: RangeSelectorProps) {
+export function RangeSelector({ selectedRange, onRangeChange, disabled = false }: RangeSelectorProps) {
   const ranges: { label: string; value: RangeType }[] = [
     { label: "Last Day", value: "day" },
     { label: "Last Week", value: "week" },
@@ -24,6 +25,7 @@ export function RangeSelector({ selectedRange, onRangeChange }: RangeSelectorPro
           variant={selectedRange === range.value ? "default" : "outline"}
           size="sm"
           onClick={() => onRangeChange(range.value)}
+          disabled={disabled}
           className="text-xs"
         >
           {range.label}

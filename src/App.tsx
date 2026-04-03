@@ -112,6 +112,9 @@ function App() {
     }, 0);
   }, [filteredTransactions]);
 
+  // Check if any filter is active
+  const isAnyFilterActive = filterType !== "all" || filterDateStart !== undefined || filterDateEnd !== undefined || filterCategories.length > 0;
+
   // --- Helper function to get date range based on selected range ---
   const getDateRangeForChart = (range: RangeType): { startDate: Date; endDate: Date; dayCount: number } => {
     const today = startOfDay(new Date());
@@ -150,7 +153,23 @@ function App() {
 
   // --- Chart Data Processing (with range support) ---
   const last30DaysData = useMemo(() => {
-    const { startDate, endDate, dayCount } = getDateRangeForChart(chartRange);
+    // When filters are active, use filter dates; otherwise use preset range
+    let startDate: Date;
+    let endDate: Date;
+    let dayCount: number;
+
+    if (isAnyFilterActive) {
+      // Use filter dates if available
+      endDate = filterDateEnd ? startOfDay(filterDateEnd) : startOfDay(new Date());
+      startDate = filterDateStart ? startOfDay(filterDateStart) : subDays(endDate, 29);
+      dayCount = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    } else {
+      // Use preset range
+      const range = getDateRangeForChart(chartRange);
+      startDate = range.startDate;
+      endDate = range.endDate;
+      dayCount = range.dayCount;
+    }
 
     // 1. Calculate Initial Balance (everything before the range start)
     let runningBalance = transactions
@@ -187,7 +206,7 @@ function App() {
     });
 
     return result;
-  }, [transactions, filteredTransactions, chartRange]);
+  }, [transactions, filteredTransactions, chartRange, isAnyFilterActive, filterDateStart, filterDateEnd]);
 
   const expenseCategorySpending = useMemo(() => {
     const catMap: Record<string, number> = {};
@@ -219,8 +238,6 @@ function App() {
   };
 
   const COLORS = ["hsl(var(--primary))", "oklch(0.627 0.265 303.9)", "oklch(0.648 0.2 160.1)", "oklch(0.852 0.199 91.936)", "oklch(0.488 0.243 264.376)"];
-
-  const isAnyFilterActive = filterType !== "all" || filterDateStart !== undefined || filterDateEnd !== undefined || filterCategories.length > 0;
 
   const clearFilters = () => {
     setFilterType("all");
@@ -283,6 +300,7 @@ function App() {
                 colors={COLORS}
                 chartRange={chartRange}
                 onRangeChange={setChartRange}
+                isAnyFilterActive={isAnyFilterActive}
               />
             )}
 

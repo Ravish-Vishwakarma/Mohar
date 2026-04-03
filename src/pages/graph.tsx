@@ -37,6 +37,7 @@ interface GraphProps {
   colors: string[];
   chartRange: RangeType;
   onRangeChange: (range: RangeType) => void;
+  isAnyFilterActive: boolean;
 }
 
 export function Graph({
@@ -48,6 +49,7 @@ export function Graph({
   colors,
   chartRange,
   onRangeChange,
+  isAnyFilterActive,
 }: GraphProps) {
   const totalIncome = incomeCategorySpending.reduce(
     (acc, curr) => acc + curr.value,
@@ -62,7 +64,11 @@ export function Graph({
     <div className="grid gap-6">
       {/* Range Selector */}
       <div className="flex justify-start">
-        <RangeSelector selectedRange={chartRange} onRangeChange={onRangeChange} />
+        <RangeSelector 
+          selectedRange={chartRange} 
+          onRangeChange={onRangeChange}
+          disabled={isAnyFilterActive}
+        />
       </div>
       {/* 1. Dedicated Balance Trend Chart - Simplified */}
       <Card className="pt-4">
