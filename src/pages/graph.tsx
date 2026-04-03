@@ -1,9 +1,8 @@
-import { TrendingUp, Scale } from "lucide-react";
+import { TrendingUp } from "lucide-react";
 import {
   PieChart,
   Pie,
   Cell,
-  ResponsiveContainer,
   AreaChart,
   Area,
   LineChart,
@@ -19,7 +18,6 @@ import { useCurrency } from "@/components/currency-provider";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -88,15 +86,15 @@ export function Graph({
     <div className="grid gap-6">
       {/* Range Selector */}
       <div className="flex justify-start">
-        <RangeSelector 
-          selectedRange={chartRange} 
+        <RangeSelector
+          selectedRange={chartRange}
           onRangeChange={onRangeChange}
           disabled={isAnyFilterActive}
         />
       </div>
       {/* 1. Dedicated Balance Trend Chart - Simplified */}
       <Card className="pt-4">
-        <CardContent className="h-[150px] w-full pt-0">
+        <CardContent className="h-37.5 w-full pt-0">
           <ChartContainer config={chartConfig} className="h-full w-full">
             <LineChart data={last30DaysData} margin={{ left: 10, right: 10, top: 5, bottom: 5 }}>
               <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.2} />
@@ -129,7 +127,7 @@ export function Graph({
         <CardHeader>
           <CardTitle>Income vs Expenses</CardTitle>
         </CardHeader>
-        <CardContent className="h-[300px] w-full">
+        <CardContent className="h-75 w-full">
           <ChartContainer config={chartConfig} className="h-full w-full">
             <AreaChart
               data={last30DaysData}
@@ -197,8 +195,8 @@ export function Graph({
             />
           </div>
           <div className="leading-none text-muted-foreground flex gap-4">
-            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#10b981]"/> Income</span>
-            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#ef4444]"/> Expense</span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#10b981]" /> Income</span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#ef4444]" /> Expense</span>
           </div>
         </CardFooter>
       </Card>
@@ -209,7 +207,7 @@ export function Graph({
           <CardHeader>
             <CardTitle>Monthly Income vs Expense</CardTitle>
           </CardHeader>
-          <CardContent className="h-[300px] w-full">
+          <CardContent className="h-75 w-full">
             <ChartContainer config={chartConfig} className="h-full w-full">
               <BarChart
                 data={monthlyIncomeExpense}
@@ -273,8 +271,8 @@ export function Graph({
             <CardTitle>Expense by Category</CardTitle>
           </CardHeader>
           <CardContent className="flex-1 pb-0">
-            <div className="h-[250px] w-full">
-              <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[250px]">
+            <div className="h-62.5 w-full">
+              <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-62.5">
                 <PieChart>
                   <ChartTooltip
                     cursor={false}
@@ -288,7 +286,7 @@ export function Graph({
                     outerRadius={80}
                     strokeWidth={5}
                   >
-                    {expenseCategorySpending.map((entry, index) => (
+                    {expenseCategorySpending.map((_entry, index) => (
                       <Cell
                         key={`cell-${index}`}
                         fill={colors[index % colors.length]}
@@ -331,9 +329,9 @@ export function Graph({
           <CardFooter className="flex-wrap gap-2 justify-center pb-6">
             {expenseCategorySpending.map((entry, index) => (
               <div key={entry.name} className="flex items-center gap-1 text-xs">
-                <div 
-                  className="h-2 w-2 rounded-full" 
-                  style={{ backgroundColor: colors[index % colors.length] }} 
+                <div
+                  className="h-2 w-2 rounded-full"
+                  style={{ backgroundColor: colors[index % colors.length] }}
                 />
                 <span className="text-muted-foreground">{entry.name}</span>
               </div>
@@ -347,8 +345,8 @@ export function Graph({
             <CardTitle>Income by Category</CardTitle>
           </CardHeader>
           <CardContent className="flex-1 pb-0">
-            <div className="h-[250px] w-full">
-              <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[250px]">
+            <div className="h-62.5 w-full">
+              <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-62.5">
                 <PieChart>
                   <ChartTooltip
                     cursor={false}
@@ -362,7 +360,7 @@ export function Graph({
                     outerRadius={80}
                     strokeWidth={5}
                   >
-                    {incomeCategorySpending.map((entry, index) => (
+                    {incomeCategorySpending.map((_entry, index) => (
                       <Cell
                         key={`cell-${index}`}
                         fill={colors[(index + 2) % colors.length]}
@@ -405,9 +403,9 @@ export function Graph({
           <CardFooter className="flex-wrap gap-2 justify-center pb-6">
             {incomeCategorySpending.map((entry, index) => (
               <div key={entry.name} className="flex items-center gap-1 text-xs">
-                <div 
-                  className="h-2 w-2 rounded-full" 
-                  style={{ backgroundColor: colors[(index + 2) % colors.length] }} 
+                <div
+                  className="h-2 w-2 rounded-full"
+                  style={{ backgroundColor: colors[(index + 2) % colors.length] }}
                 />
                 <span className="text-muted-foreground">{entry.name}</span>
               </div>

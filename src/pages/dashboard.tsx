@@ -7,7 +7,6 @@ import { useCurrency } from "@/components/currency-provider";
 import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -107,7 +106,7 @@ export function Dashboard({
             <TableHead>Category</TableHead>
             <TableHead>Date</TableHead>
             <TableHead className="text-right">Amount</TableHead>
-            <TableHead className="w-[100px]"></TableHead>
+            <TableHead className="w-25"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
