@@ -1,0 +1,12 @@
+{
+  "identifier": "mohar-app-commands",
+  "description": "Permissions for Mohar expense commands",
+  "commands": {
+    "allow": [
+      "list",
+      "add",
+      "update",
+      "delete"
+    ]
+  }
+}
