@@ -55,36 +55,23 @@ export function Graph({
 
   return (
     <div className="grid gap-6">
-      {/* 1. Dedicated Balance Trend Chart */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <div className="space-y-1">
-            <CardTitle>Total Balance Trend</CardTitle>
-            <CardDescription>Cumulative wallet balance over the last 30 days</CardDescription>
-          </div>
-          <Scale className="h-4 w-4 text-muted-foreground" />
-        </CardHeader>
-        <CardContent className="h-[200px] w-full pt-4">
+      {/* 1. Dedicated Balance Trend Chart - Simplified */}
+      <Card className="pt-4">
+        <CardContent className="h-[150px] w-full pt-0">
           <ChartContainer config={chartConfig} className="h-full w-full">
-            <LineChart data={last30DaysData} margin={{ left: 0, right: 10 }}>
-              <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.3} />
+            <LineChart data={last30DaysData} margin={{ left: 10, right: 10, top: 5, bottom: 5 }}>
+              <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.2} />
               <XAxis
                 dataKey="date"
-                tickLine={false}
-                axisLine={false}
-                tickMargin={8}
-                minTickGap={32}
-                fontSize={10}
+                hide
               />
               <YAxis
-                tickLine={false}
-                axisLine={false}
-                fontSize={10}
-                tickFormatter={(value) => `$${value}`}
+                hide
+                domain={['auto', 'auto']}
               />
               <ChartTooltip
                 cursor={true}
-                content={<ChartTooltipContent />}
+                content={<ChartTooltipContent hideLabel />}
               />
               <Line
                 type="monotone"
