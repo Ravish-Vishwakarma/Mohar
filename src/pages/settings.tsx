@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, X, Download } from "lucide-react";
+import { Plus, X, Download, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Card,
@@ -34,6 +34,7 @@ export function Settings({
   onDeleteCategory,
 }: SettingsProps) {
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [isExporting, setIsExporting] = useState(false);
   const { currency, setCurrency } = useCurrency();
   const { toast } = useToast();
 
@@ -44,7 +45,7 @@ export function Settings({
     }
   };
 
-  const handleExportCSV = () => {
+  const handleExportCSV = async () => {
     if (transactions.length === 0) {
       toast({
         title: "No transactions",
@@ -53,6 +54,11 @@ export function Settings({
       });
       return;
     }
+
+    setIsExporting(true);
+
+    // Simulate processing delay
+    await new Promise(resolve => setTimeout(resolve, 800));
 
     // CSV headers
     const headers = ["ID", "Title", "Amount", "Category", "Date", "Type"];
@@ -87,9 +93,12 @@ export function Settings({
     link.click();
     document.body.removeChild(link);
 
+    setIsExporting(false);
+
+    const downloadsPath = `Downloads/${fileName}`;
     toast({
       title: "Export successful!",
-      description: "Check your Downloads folder for the CSV file.",
+      description: `File saved to: ${downloadsPath}`,
     });
   };
 
@@ -136,9 +145,22 @@ export function Settings({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button onClick={handleExportCSV} className="gap-2">
-            <Download className="w-4 h-4" />
-            Export to CSV
+          <Button 
+            onClick={handleExportCSV} 
+            className="gap-2"
+            disabled={isExporting}
+          >
+            {isExporting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4" />
+                Export to CSV
+              </>
+            )}
           </Button>
         </CardContent>
       </Card>
