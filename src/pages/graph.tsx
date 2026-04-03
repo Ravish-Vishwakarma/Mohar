@@ -26,6 +26,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { RangeSelector, type RangeType } from "@/components/range-selector";
 
 interface GraphProps {
   last30DaysData: any[];
@@ -34,6 +35,8 @@ interface GraphProps {
   balance: number;
   chartConfig: any;
   colors: string[];
+  chartRange: RangeType;
+  onRangeChange: (range: RangeType) => void;
 }
 
 export function Graph({
@@ -43,6 +46,8 @@ export function Graph({
   balance,
   chartConfig,
   colors,
+  chartRange,
+  onRangeChange,
 }: GraphProps) {
   const totalIncome = incomeCategorySpending.reduce(
     (acc, curr) => acc + curr.value,
@@ -55,6 +60,10 @@ export function Graph({
 
   return (
     <div className="grid gap-6">
+      {/* Range Selector */}
+      <div className="flex justify-start">
+        <RangeSelector selectedRange={chartRange} onRangeChange={onRangeChange} />
+      </div>
       {/* 1. Dedicated Balance Trend Chart - Simplified */}
       <Card className="pt-4">
         <CardContent className="h-[150px] w-full pt-0">

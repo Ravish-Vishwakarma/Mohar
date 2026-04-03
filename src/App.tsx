@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { format, subDays, startOfDay, isAfter, isBefore, parseISO, endOfDay } from "date-fns";
+import { format, subDays, startOfDay, isAfter, isBefore, parseISO, endOfDay, subYears } from "date-fns";
 
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
@@ -14,6 +14,7 @@ import { Settings } from "@/pages/settings";
 import { User } from "@/pages/user";
 
 import { Transaction, Page } from "@/types";
+import type { RangeType } from "@/components/range-selector";
 
 function App() {
   const [activePage, setActivePage] = useState<Page>("dashboard");
@@ -29,6 +30,9 @@ function App() {
   const [filterDateStart, setFilterDateStart] = useState<Date | undefined>(undefined);
   const [filterDateEnd, setFilterDateEnd] = useState<Date | undefined>(undefined);
   const [filterCategories, setFilterCategories] = useState<string[]>([]);
+
+  // Range State (for graph view)
+  const [chartRange, setChartRange] = useState<RangeType>("month");
 
   useEffect(() => {
     fetchData();
@@ -108,21 +112,56 @@ function App() {
     }, 0);
   }, [filteredTransactions]);
 
-  // --- Chart Data Processing ---
-  const last30DaysData = useMemo(() => {
+  // --- Helper function to get date range based on selected range ---
+  const getDateRangeForChart = (range: RangeType): { startDate: Date; endDate: Date; dayCount: number } => {
     const today = startOfDay(new Date());
-    const thirtyDaysAgo = subDays(today, 29);
-    
-    // 1. Calculate Initial Balance (everything before the 30-day window)
+    let startDate: Date;
+    let dayCount: number;
+
+    switch (range) {
+      case "day":
+        startDate = today;
+        dayCount = 1;
+        break;
+      case "week":
+        startDate = subDays(today, 6);
+        dayCount = 7;
+        break;
+      case "month":
+        startDate = subDays(today, 29);
+        dayCount = 30;
+        break;
+      case "year":
+        startDate = subDays(today, 364);
+        dayCount = 365;
+        break;
+      case "all-time":
+        // Find the earliest transaction date
+        const allDates = transactions
+          .map((t) => parseISO(t.date))
+          .sort((a, b) => a.getTime() - b.getTime());
+        startDate = allDates.length > 0 ? startOfDay(allDates[0]) : subYears(today, 5);
+        dayCount = Math.ceil((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        break;
+    }
+
+    return { startDate, endDate: today, dayCount };
+  };
+
+  // --- Chart Data Processing (with range support) ---
+  const last30DaysData = useMemo(() => {
+    const { startDate, endDate, dayCount } = getDateRangeForChart(chartRange);
+
+    // 1. Calculate Initial Balance (everything before the range start)
     let runningBalance = transactions
-      .filter(t => isBefore(parseISO(t.date), thirtyDaysAgo))
+      .filter(t => isBefore(parseISO(t.date), startDate))
       .reduce((acc, t) => acc + (t.type === "income" ? t.amount : -t.amount), 0);
 
     const dailyMap: Record<string, { date: string; income: number; expense: number; balance: number }> = {};
-    
-    // 2. Initialize the 30 days
-    for (let i = 0; i < 30; i++) {
-      const dateObj = subDays(today, 29 - i);
+
+    // 2. Initialize the days in the selected range
+    for (let i = 0; i < dayCount; i++) {
+      const dateObj = subDays(endDate, dayCount - 1 - i);
       const d = format(dateObj, "MMM d");
       const fullDate = format(dateObj, "yyyy-MM-dd");
       dailyMap[fullDate] = { date: d, income: 0, expense: 0, balance: 0 };
@@ -148,7 +187,7 @@ function App() {
     });
 
     return result;
-  }, [transactions, filteredTransactions]);
+  }, [transactions, filteredTransactions, chartRange]);
 
   const expenseCategorySpending = useMemo(() => {
     const catMap: Record<string, number> = {};
@@ -242,6 +281,8 @@ function App() {
                 balance={balance}
                 chartConfig={chartConfig}
                 colors={COLORS}
+                chartRange={chartRange}
+                onRangeChange={setChartRange}
               />
             )}
 
