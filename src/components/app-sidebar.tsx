@@ -23,8 +23,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { useTheme } from "./theme-provider"
-
-export type Page = "dashboard" | "user" | "graph" | "settings"
+import { Page } from "@/types"
 
 const items: { title: string; id: Page; icon: any }[] = [
   {
