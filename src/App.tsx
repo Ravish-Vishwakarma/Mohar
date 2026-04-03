@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
+import { Button } from "./components/ui/button";
 
 function App() {
   const [greetMsg, setGreetMsg] = useState("");
@@ -13,7 +14,7 @@ function App() {
 
   return (
     <main className="container">
-
+      <Button>Hello World</Button>
       <form
         className="row"
         onSubmit={(e) => {
