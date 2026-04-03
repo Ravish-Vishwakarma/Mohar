@@ -6,20 +6,32 @@ export function WindowControls() {
   const appWindow = getCurrentWindow();
 
   const handleMinimize = async () => {
-    await appWindow.minimize();
+    try {
+      await appWindow.minimize();
+    } catch (error) {
+      console.error("Failed to minimize:", error);
+    }
   };
 
   const handleMaximize = async () => {
-    const isMaximized = await appWindow.isMaximized();
-    if (isMaximized) {
-      await appWindow.unmaximize();
-    } else {
-      await appWindow.maximize();
+    try {
+      const isMaximized = await appWindow.isMaximized();
+      if (isMaximized) {
+        await appWindow.unmaximize();
+      } else {
+        await appWindow.maximize();
+      }
+    } catch (error) {
+      console.error("Failed to toggle maximize:", error);
     }
   };
 
   const handleClose = async () => {
-    await appWindow.close();
+    try {
+      await appWindow.close();
+    } catch (error) {
+      console.error("Failed to close:", error);
+    }
   };
 
   return (

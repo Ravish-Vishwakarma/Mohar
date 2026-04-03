@@ -285,20 +285,11 @@ function App() {
         <SidebarInset>
           <div className="w-full min-h-screen flex flex-col">
             {/* Custom Title Bar */}
-            <div className="h-10 shrink-0 flex items-center justify-between px-4 border-b bg-background/95 backdrop-blur z-20 draggable-region">
-              <div className="flex-1">
+            <div className="h-10 shrink-0 flex items-center justify-between px-4 border-b bg-background/95 backdrop-blur z-20 draggable-region gap-4">
+              <div className="flex items-center gap-4 flex-1">
                 <h1 className="text-sm font-semibold capitalize text-muted-foreground">
                   {activePage}
                 </h1>
-              </div>
-              <WindowControls />
-            </div>
-
-            {/* Main Content */}
-            <div className="flex-1 p-6">
-              <header className="flex h-10 shrink-0 items-center justify-between mb-6 border-b sticky top-0 bg-background/95 backdrop-blur z-10 px-4">
-                <div className="flex-1"></div>
-
                 {(activePage === "dashboard" || activePage === "graph") && (
                   <FilterPopover
                     filterType={filterType}
@@ -314,9 +305,13 @@ function App() {
                     onClear={clearFilters}
                   />
                 )}
-              </header>
+              </div>
+              <WindowControls />
+            </div>
 
-            {activePage === "dashboard" && (
+            {/* Main Content */}
+            <div className="flex-1 p-6">
+              {activePage === "dashboard" && (
               <Dashboard
                 transactions={filteredTransactions}
                 onEdit={(t) => {

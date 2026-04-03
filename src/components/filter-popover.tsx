@@ -66,7 +66,12 @@ export function FilterPopover({
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-80" align="end">
+        <PopoverContent 
+          className="w-80" 
+          align="end"
+          side="bottom"
+          sideOffset={8}
+        >
           <div className="space-y-4">
             <div className="space-y-2">
               <h4 className="font-medium text-sm">Type</h4>

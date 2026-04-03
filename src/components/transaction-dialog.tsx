@@ -94,9 +94,6 @@ export function TransactionDialog({
             <DialogTitle>
               {editingTransaction ? "Edit Transaction" : "Add Transaction"}
             </DialogTitle>
-            <DialogDescription>
-              Record your income or expenses here.
-            </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
