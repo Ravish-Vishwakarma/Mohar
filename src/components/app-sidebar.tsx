@@ -67,13 +67,14 @@ export function AppSidebar({ activePage, onPageChange }: AppSidebarProps) {
         <SidebarGroup>
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="gap-2">
               {items.map((item) => (
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton 
                     tooltip={item.title} 
                     isActive={activePage === item.id}
                     onClick={() => onPageChange(item.id)}
+                    className={activePage === item.id ? "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground" : ""}
                   >
                     <item.icon className="size-4" />
                     <span>{item.title}</span>

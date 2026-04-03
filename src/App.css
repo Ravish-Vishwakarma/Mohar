@@ -196,3 +196,12 @@ html {
   background-color: oklch(0.269 0 0);
   color: oklch(0.985 0 0);
 }
+
+/* Sidebar button active state styling */
+[data-active="true"] {
+  @apply bg-primary text-primary-foreground;
+}
+
+[data-active="true"]:hover {
+  @apply bg-primary text-primary-foreground;
+}
