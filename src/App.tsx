@@ -111,20 +111,44 @@ function App() {
   // --- Chart Data Processing ---
   const last30DaysData = useMemo(() => {
     const today = startOfDay(new Date());
-    const dailyMap: Record<string, { date: string; income: number; expense: number }> = {};
+    const thirtyDaysAgo = subDays(today, 29);
+    
+    // 1. Calculate Initial Balance (everything before the 30-day window)
+    let runningBalance = transactions
+      .filter(t => isBefore(parseISO(t.date), thirtyDaysAgo))
+      .reduce((acc, t) => acc + (t.type === "income" ? t.amount : -t.amount), 0);
+
+    const dailyMap: Record<string, { date: string; income: number; expense: number; balance: number }> = {};
+    
+    // 2. Initialize the 30 days
     for (let i = 0; i < 30; i++) {
-      const d = format(subDays(today, 29 - i), "MMM d");
-      const fullDate = format(subDays(today, 29 - i), "yyyy-MM-dd");
-      dailyMap[fullDate] = { date: d, income: 0, expense: 0 };
+      const dateObj = subDays(today, 29 - i);
+      const d = format(dateObj, "MMM d");
+      const fullDate = format(dateObj, "yyyy-MM-dd");
+      dailyMap[fullDate] = { date: d, income: 0, expense: 0, balance: 0 };
     }
+
+    // 3. Fill daily net changes
     filteredTransactions.forEach((t) => {
       if (dailyMap[t.date]) {
         if (t.type === "income") dailyMap[t.date].income += t.amount;
         else dailyMap[t.date].expense += t.amount;
       }
     });
-    return Object.values(dailyMap);
-  }, [filteredTransactions]);
+
+    // 4. Calculate Cumulative Balance day by day
+    const sortedDates = Object.keys(dailyMap).sort();
+    const result = sortedDates.map(date => {
+      const dayData = dailyMap[date];
+      runningBalance += (dayData.income - dayData.expense);
+      return {
+        ...dayData,
+        balance: runningBalance
+      };
+    });
+
+    return result;
+  }, [transactions, filteredTransactions]);
 
   const expenseCategorySpending = useMemo(() => {
     const catMap: Record<string, number> = {};

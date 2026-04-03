@@ -1,12 +1,13 @@
-import { TrendingUp } from "lucide-react";
+import { TrendingUp, Scale } from "lucide-react";
 import {
   PieChart,
   Pie,
   Cell,
-  Tooltip,
   ResponsiveContainer,
   AreaChart,
   Area,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -54,12 +55,56 @@ export function Graph({
 
   return (
     <div className="grid gap-6">
+      {/* 1. Dedicated Balance Trend Chart */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <div className="space-y-1">
+            <CardTitle>Total Balance Trend</CardTitle>
+            <CardDescription>Cumulative wallet balance over the last 30 days</CardDescription>
+          </div>
+          <Scale className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent className="h-[200px] w-full pt-4">
+          <ChartContainer config={chartConfig} className="h-full w-full">
+            <LineChart data={last30DaysData} margin={{ left: 0, right: 10 }}>
+              <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.3} />
+              <XAxis
+                dataKey="date"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                minTickGap={32}
+                fontSize={10}
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                fontSize={10}
+                tickFormatter={(value) => `$${value}`}
+              />
+              <ChartTooltip
+                cursor={true}
+                content={<ChartTooltipContent />}
+              />
+              <Line
+                type="monotone"
+                dataKey="balance"
+                stroke="#3b82f6"
+                strokeWidth={2}
+                dot={false}
+              />
+            </LineChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
+
+      {/* 2. Income vs Expenses Area Chart */}
       <Card>
         <CardHeader>
           <CardTitle>Income vs Expenses</CardTitle>
-          <CardDescription>Daily overview of the last 30 days.</CardDescription>
+          <CardDescription>Daily financial flow comparison</CardDescription>
         </CardHeader>
-        <CardContent className="h-[350px] w-full">
+        <CardContent className="h-[300px] w-full">
           <ChartContainer config={chartConfig} className="h-full w-full">
             <AreaChart
               data={last30DaysData}
@@ -120,15 +165,15 @@ export function Graph({
         </CardContent>
         <CardFooter className="flex-col items-start gap-2 text-sm border-t pt-4">
           <div className="flex gap-2 font-medium leading-none">
-            Your net balance is {balance >= 0 ? "positive" : "negative"}{" "}
-            <TrendingUp
+            Your current net balance is ${balance.toFixed(2)} <TrendingUp
               className={
                 balance >= 0 ? "text-green-500 h-4 w-4" : "text-red-500 h-4 w-4"
               }
             />
           </div>
-          <div className="leading-none text-muted-foreground">
-            Showing trends based on your active filters
+          <div className="leading-none text-muted-foreground flex gap-4">
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#10b981]"/> Income</span>
+            <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-[#ef4444]"/> Expense</span>
           </div>
         </CardFooter>
       </Card>
@@ -142,8 +187,12 @@ export function Graph({
           </CardHeader>
           <CardContent className="flex-1 pb-0">
             <div className="h-[250px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
+              <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[250px]">
                 <PieChart>
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent hideLabel />}
+                  />
                   <Pie
                     data={expenseCategorySpending}
                     dataKey="value"
@@ -188,9 +237,8 @@ export function Graph({
                       }}
                     />
                   </Pie>
-                  <Tooltip />
                 </PieChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             </div>
           </CardContent>
           <CardFooter className="flex-wrap gap-2 justify-center pb-6">
@@ -214,8 +262,12 @@ export function Graph({
           </CardHeader>
           <CardContent className="flex-1 pb-0">
             <div className="h-[250px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
+              <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[250px]">
                 <PieChart>
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent hideLabel />}
+                  />
                   <Pie
                     data={incomeCategorySpending}
                     dataKey="value"
@@ -260,9 +312,8 @@ export function Graph({
                       }}
                     />
                   </Pie>
-                  <Tooltip />
                 </PieChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             </div>
           </CardContent>
           <CardFooter className="flex-wrap gap-2 justify-center pb-6">
