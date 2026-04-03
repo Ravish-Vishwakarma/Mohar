@@ -126,7 +126,7 @@ function App() {
     return Object.values(dailyMap);
   }, [filteredTransactions]);
 
-  const categorySpending = useMemo(() => {
+  const expenseCategorySpending = useMemo(() => {
     const catMap: Record<string, number> = {};
     filteredTransactions
       .filter((t) => t.type === "expense")
@@ -138,9 +138,21 @@ function App() {
       .sort((a, b) => b.value - a.value);
   }, [filteredTransactions]);
 
+  const incomeCategorySpending = useMemo(() => {
+    const catMap: Record<string, number> = {};
+    filteredTransactions
+      .filter((t) => t.type === "income")
+      .forEach((t) => {
+        catMap[t.category] = (catMap[t.category] || 0) + t.amount;
+      });
+    return Object.entries(catMap)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
+  }, [filteredTransactions]);
+
   const chartConfig = {
-    income: { label: "Income", color: "hsl(var(--primary))" },
-    expense: { label: "Expense", color: "hsl(var(--destructive))" },
+    income: { label: "Income", color: "#10b981" }, // Emerald 500
+    expense: { label: "Expense", color: "#ef4444" }, // Red 500
   };
 
   const COLORS = ["hsl(var(--primary))", "oklch(0.627 0.265 303.9)", "oklch(0.648 0.2 160.1)", "oklch(0.852 0.199 91.936)", "oklch(0.488 0.243 264.376)"];
@@ -201,7 +213,8 @@ function App() {
             {activePage === "graph" && (
               <Graph
                 last30DaysData={last30DaysData}
-                categorySpending={categorySpending}
+                incomeCategorySpending={incomeCategorySpending}
+                expenseCategorySpending={expenseCategorySpending}
                 balance={balance}
                 chartConfig={chartConfig}
                 colors={COLORS}

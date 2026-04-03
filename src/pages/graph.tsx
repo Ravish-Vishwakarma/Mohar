@@ -8,7 +8,9 @@ import {
   AreaChart,
   Area,
   XAxis,
+  YAxis,
   CartesianGrid,
+  Label,
 } from "recharts";
 import {
   Card,
@@ -26,7 +28,8 @@ import {
 
 interface GraphProps {
   last30DaysData: any[];
-  categorySpending: any[];
+  incomeCategorySpending: any[];
+  expenseCategorySpending: any[];
   balance: number;
   chartConfig: any;
   colors: string[];
@@ -34,11 +37,21 @@ interface GraphProps {
 
 export function Graph({
   last30DaysData,
-  categorySpending,
+  incomeCategorySpending,
+  expenseCategorySpending,
   balance,
   chartConfig,
   colors,
 }: GraphProps) {
+  const totalIncome = incomeCategorySpending.reduce(
+    (acc, curr) => acc + curr.value,
+    0
+  );
+  const totalExpenses = expenseCategorySpending.reduce(
+    (acc, curr) => acc + curr.value,
+    0
+  );
+
   return (
     <div className="grid gap-6">
       <Card>
@@ -46,117 +59,223 @@ export function Graph({
           <CardTitle>Income vs Expenses</CardTitle>
           <CardDescription>Daily overview of the last 30 days.</CardDescription>
         </CardHeader>
-        <CardContent className="h-[300px] w-full">
+        <CardContent className="h-[350px] w-full">
           <ChartContainer config={chartConfig} className="h-full w-full">
-            <AreaChart data={last30DaysData} margin={{ left: 12, right: 12 }}>
-              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+            <AreaChart
+              data={last30DaysData}
+              margin={{ top: 10, left: 0, right: 10, bottom: 0 }}
+            >
+              <defs>
+                <linearGradient id="fillIncome" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="fillExpense" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid
+                vertical={false}
+                strokeDasharray="3 3"
+                opacity={0.5}
+              />
               <XAxis
                 dataKey="date"
                 tickLine={false}
                 axisLine={false}
                 tickMargin={8}
+                minTickGap={32}
+                fontSize={12}
               />
-              <ChartTooltip content={<ChartTooltipContent />} />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                fontSize={12}
+                tickFormatter={(value) => `$${value}`}
+              />
+              <ChartTooltip
+                cursor={false}
+                content={<ChartTooltipContent indicator="dot" />}
+              />
               <Area
                 type="monotone"
                 dataKey="income"
-                stroke="hsl(var(--primary))"
-                fill="hsl(var(--primary))"
-                fillOpacity={0.4}
+                stroke="#10b981"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#fillIncome)"
               />
               <Area
                 type="monotone"
                 dataKey="expense"
-                stroke="hsl(var(--destructive))"
-                fill="hsl(var(--destructive))"
-                fillOpacity={0.4}
+                stroke="#ef4444"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#fillExpense)"
               />
             </AreaChart>
           </ChartContainer>
         </CardContent>
-        <CardFooter className="flex-col items-start gap-2 text-sm">
+        <CardFooter className="flex-col items-start gap-2 text-sm border-t pt-4">
           <div className="flex gap-2 font-medium leading-none">
             Your net balance is {balance >= 0 ? "positive" : "negative"}{" "}
-            <TrendingUp className="h-4 w-4" />
+            <TrendingUp
+              className={
+                balance >= 0 ? "text-green-500 h-4 w-4" : "text-red-500 h-4 w-4"
+              }
+            />
           </div>
           <div className="leading-none text-muted-foreground">
-            Showing filtered results for the last 30 days
+            Showing trends based on your active filters
           </div>
         </CardFooter>
       </Card>
 
       <div className="grid md:grid-cols-2 gap-6">
+        {/* Expense Category Donut */}
         <Card className="flex flex-col">
           <CardHeader className="items-center pb-0">
-            <CardTitle>Category Spending</CardTitle>
-            <CardDescription>Expense distribution by category</CardDescription>
+            <CardTitle>Expense by Category</CardTitle>
+            <CardDescription>Distribution of your spending</CardDescription>
           </CardHeader>
           <CardContent className="flex-1 pb-0">
             <div className="h-[250px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={categorySpending}
+                    data={expenseCategorySpending}
                     dataKey="value"
                     nameKey="name"
                     innerRadius={60}
                     outerRadius={80}
-                    paddingAngle={5}
+                    strokeWidth={5}
                   >
-                    {categorySpending.map((entry, index) => (
+                    {expenseCategorySpending.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
                         fill={colors[index % colors.length]}
                       />
                     ))}
+                    <Label
+                      content={({ viewBox }) => {
+                        if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                          return (
+                            <text
+                              x={viewBox.cx}
+                              y={viewBox.cy}
+                              textAnchor="middle"
+                              dominantBaseline="middle"
+                            >
+                              <tspan
+                                x={viewBox.cx}
+                                y={viewBox.cy}
+                                className="fill-foreground text-3xl font-bold"
+                              >
+                                ${totalExpenses.toLocaleString()}
+                              </tspan>
+                              <tspan
+                                x={viewBox.cx}
+                                y={(viewBox.cy || 0) + 24}
+                                className="fill-muted-foreground"
+                              >
+                                Expenses
+                              </tspan>
+                            </text>
+                          );
+                        }
+                      }}
+                    />
                   </Pie>
                   <Tooltip />
                 </PieChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
+          <CardFooter className="flex-wrap gap-2 justify-center pb-6">
+            {expenseCategorySpending.map((entry, index) => (
+              <div key={entry.name} className="flex items-center gap-1 text-xs">
+                <div 
+                  className="h-2 w-2 rounded-full" 
+                  style={{ backgroundColor: colors[index % colors.length] }} 
+                />
+                <span className="text-muted-foreground">{entry.name}</span>
+              </div>
+            ))}
+          </CardFooter>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Top Expenses</CardTitle>
-            <CardDescription>Highest spending categories</CardDescription>
+        {/* Income Category Donut */}
+        <Card className="flex flex-col">
+          <CardHeader className="items-center pb-0">
+            <CardTitle>Income by Category</CardTitle>
+            <CardDescription>Source of your earnings</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {categorySpending.slice(0, 5).map((cat, i) => (
-                <div key={cat.name} className="flex items-center gap-4">
-                  <div
-                    className="h-2 w-2 rounded-full"
-                    style={{ backgroundColor: colors[i % colors.length] }}
-                  />
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {cat.name}
-                    </p>
-                    <div className="h-2 w-full rounded-full bg-secondary">
-                      <div
-                        className="h-full rounded-full bg-primary"
-                        style={{
-                          width: `${
-                            (cat.value /
-                              Math.max(
-                                ...categorySpending.map((v) => v.value)
-                              )) *
-                            100
-                          }%`,
-                          backgroundColor: colors[i % colors.length],
-                        }}
+          <CardContent className="flex-1 pb-0">
+            <div className="h-[250px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={incomeCategorySpending}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={60}
+                    outerRadius={80}
+                    strokeWidth={5}
+                  >
+                    {incomeCategorySpending.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={colors[(index + 2) % colors.length]}
                       />
-                    </div>
-                  </div>
-                  <div className="text-sm font-medium">
-                    ${cat.value.toFixed(2)}
-                  </div>
-                </div>
-              ))}
+                    ))}
+                    <Label
+                      content={({ viewBox }) => {
+                        if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                          return (
+                            <text
+                              x={viewBox.cx}
+                              y={viewBox.cy}
+                              textAnchor="middle"
+                              dominantBaseline="middle"
+                            >
+                              <tspan
+                                x={viewBox.cx}
+                                y={viewBox.cy}
+                                className="fill-foreground text-3xl font-bold"
+                              >
+                                ${totalIncome.toLocaleString()}
+                              </tspan>
+                              <tspan
+                                x={viewBox.cx}
+                                y={(viewBox.cy || 0) + 24}
+                                className="fill-muted-foreground"
+                              >
+                                Income
+                              </tspan>
+                            </text>
+                          );
+                        }
+                      }}
+                    />
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
+          <CardFooter className="flex-wrap gap-2 justify-center pb-6">
+            {incomeCategorySpending.map((entry, index) => (
+              <div key={entry.name} className="flex items-center gap-1 text-xs">
+                <div 
+                  className="h-2 w-2 rounded-full" 
+                  style={{ backgroundColor: colors[(index + 2) % colors.length] }} 
+                />
+                <span className="text-muted-foreground">{entry.name}</span>
+              </div>
+            ))}
+          </CardFooter>
         </Card>
       </div>
     </div>
