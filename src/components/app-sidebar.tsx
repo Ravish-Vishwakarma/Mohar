@@ -3,7 +3,9 @@ import {
   User,
   ChartColumnBig,
   Settings,
-  Wallet
+  Wallet,
+  Sun,
+  Moon
 } from "lucide-react"
 
 import {
@@ -20,6 +22,7 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { useTheme } from "./theme-provider"
 
 export type Page = "dashboard" | "user" | "graph" | "settings"
 
@@ -53,6 +56,7 @@ interface AppSidebarProps {
 
 export function AppSidebar({ activePage, onPageChange }: AppSidebarProps) {
   const { state } = useSidebar()
+  const { theme, setTheme } = useTheme()
 
   return (
     <Sidebar collapsible="icon">
@@ -87,7 +91,18 @@ export function AppSidebar({ activePage, onPageChange }: AppSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="flex items-center justify-center py-4">
+      <SidebarFooter className="flex flex-col gap-2 p-4 group-data-[collapsible=icon]:p-2 items-center">
+        <SidebarMenu>
+          <SidebarMenuItem className="w-full">
+            <SidebarMenuButton 
+              tooltip={`Toggle ${theme === "dark" ? "Light" : "Dark"} Mode`}
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            >
+              {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
+              <span>{theme === "dark" ? "Light" : "Dark"} Mode</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
         <SidebarTrigger />
       </SidebarFooter>
     </Sidebar>

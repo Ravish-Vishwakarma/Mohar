@@ -188,8 +188,8 @@ function App() {
         <AppSidebar activePage={activePage} onPageChange={setActivePage} />
         <SidebarInset>
           <div className="container mx-auto p-4 max-w-4xl min-h-screen">
-            <header className="flex h-16 shrink-0 items-center gap-2 mb-4 border-b">
-              <h1 className="text-xl font-bold px-4 capitalize">{activePage}</h1>
+            <header className="flex h-10 shrink-0 items-center gap-2 mb-6 border-b sticky top-0 bg-background/95 backdrop-blur z-10 px-4">
+              <h1 className="text-sm font-semibold capitalize text-muted-foreground">{activePage}</h1>
             </header>
 
             {activePage === "dashboard" && (
