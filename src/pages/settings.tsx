@@ -10,6 +10,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useCurrency, type Currency } from "@/components/currency-provider";
 
 interface SettingsProps {
   categories: string[];
@@ -25,6 +33,7 @@ export function Settings({
   onDeleteCategory,
 }: SettingsProps) {
   const [newCategoryName, setNewCategoryName] = useState("");
+  const { currency, setCurrency } = useCurrency();
 
   const handleAdd = () => {
     if (newCategoryName.trim()) {
@@ -75,6 +84,38 @@ export function Settings({
 
   return (
     <div className="space-y-6">
+      {/* Currency Settings Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Currency Settings</CardTitle>
+          <CardDescription>
+            Choose the currency for displaying amounts throughout your app.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4">
+            <label htmlFor="currency" className="text-sm font-medium">
+              Select Currency:
+            </label>
+            <Select value={currency} onValueChange={(value) => setCurrency(value as Currency)}>
+              <SelectTrigger id="currency" className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="USD">USD - US Dollar ($)</SelectItem>
+                <SelectItem value="EUR">EUR - Euro (€)</SelectItem>
+                <SelectItem value="GBP">GBP - British Pound (£)</SelectItem>
+                <SelectItem value="INR">INR - Indian Rupee (₹)</SelectItem>
+                <SelectItem value="AUD">AUD - Australian Dollar (A$)</SelectItem>
+                <SelectItem value="CAD">CAD - Canadian Dollar (C$)</SelectItem>
+                <SelectItem value="JPY">JPY - Japanese Yen (¥)</SelectItem>
+                <SelectItem value="CHF">CHF - Swiss Franc</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Export Data Card */}
       <Card>
         <CardHeader>

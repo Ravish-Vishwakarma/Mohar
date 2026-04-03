@@ -2,6 +2,7 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Transaction } from "@/types";
+import { useCurrency } from "@/components/currency-provider";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -36,6 +37,8 @@ export function Dashboard({
   onAddClick,
   isAnyFilterActive,
 }: DashboardProps) {
+  const { symbol } = useCurrency();
+
   const totals = transactions.reduce(
     (acc, t) => {
       if (t.type === "income") acc.income += t.amount;
@@ -54,7 +57,7 @@ export function Dashboard({
           <CardHeader className="py-4">
             <CardDescription>Total Income</CardDescription>
             <CardTitle className="text-2xl text-green-600">
-              ${totals.income.toFixed(2)}
+              {symbol}{totals.income.toFixed(2)}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -62,7 +65,7 @@ export function Dashboard({
           <CardHeader className="py-4">
             <CardDescription>Total Expenses</CardDescription>
             <CardTitle className="text-2xl text-red-600">
-              ${totals.expenses.toFixed(2)}
+              {symbol}{totals.expenses.toFixed(2)}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -75,7 +78,7 @@ export function Dashboard({
                 balance >= 0 ? "text-blue-600" : "text-orange-600"
               )}
             >
-              ${balance.toFixed(2)}
+              {symbol}{balance.toFixed(2)}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -138,7 +141,7 @@ export function Dashboard({
                     t.type === "income" ? "text-green-600" : "text-red-600"
                   )}
                 >
-                  {t.type === "income" ? "+" : "-"}${t.amount.toFixed(2)}
+                  {t.type === "income" ? "+" : "-"}{symbol}{t.amount.toFixed(2)}
                 </TableCell>
                 <TableCell className="py-3">
                   <div className="flex justify-end gap-2">

@@ -15,6 +15,7 @@ import {
   CartesianGrid,
   Label,
 } from "recharts";
+import { useCurrency } from "@/components/currency-provider";
 import {
   Card,
   CardContent,
@@ -55,6 +56,8 @@ export function Graph({
   onRangeChange,
   isAnyFilterActive,
 }: GraphProps) {
+  const { symbol } = useCurrency();
+
   const totalIncome = incomeCategorySpending.reduce(
     (acc, curr) => acc + curr.value,
     0
@@ -73,7 +76,7 @@ export function Graph({
         <div className="rounded-lg border border-border bg-card p-2 shadow-md">
           <p className="text-xs font-medium text-foreground">{data.date}</p>
           <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">
-            ${data.balance.toFixed(2)}
+            {symbol}{data.balance.toFixed(2)}
           </p>
         </div>
       );
