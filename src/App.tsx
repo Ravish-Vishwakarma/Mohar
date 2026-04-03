@@ -11,7 +11,6 @@ import { FilterPopover } from "@/components/filter-popover";
 import { Dashboard } from "@/pages/dashboard";
 import { Graph } from "@/pages/graph";
 import { Settings } from "@/pages/settings";
-import { User } from "@/pages/user";
 
 import { Transaction, Page } from "@/types";
 import type { RangeType } from "@/components/range-selector";
@@ -232,25 +231,22 @@ function App() {
       .sort((a, b) => b.value - a.value);
   }, [filteredTransactions]);
 
-  const monthlyExpenseByCategory = useMemo(() => {
-    const monthlyMap: Record<string, Record<string, number>> = {};
+  const monthlyIncomeExpense = useMemo(() => {
+    const monthlyMap: Record<string, { income: number; expense: number }> = {};
     
-    filteredTransactions
-      .filter((t) => t.type === "expense")
-      .forEach((t) => {
-        const date = parseISO(t.date);
-        const monthKey = format(date, "MMM yyyy");
-        
-        if (!monthlyMap[monthKey]) {
-          monthlyMap[monthKey] = {};
-        }
-        monthlyMap[monthKey][t.category] = (monthlyMap[monthKey][t.category] || 0) + t.amount;
-      });
-
-    // Get all unique categories
-    const allCategories = new Set<string>();
-    Object.values(monthlyMap).forEach(month => {
-      Object.keys(month).forEach(cat => allCategories.add(cat));
+    filteredTransactions.forEach((t) => {
+      const date = parseISO(t.date);
+      const monthKey = format(date, "MMM yyyy");
+      
+      if (!monthlyMap[monthKey]) {
+        monthlyMap[monthKey] = { income: 0, expense: 0 };
+      }
+      
+      if (t.type === "income") {
+        monthlyMap[monthKey].income += t.amount;
+      } else {
+        monthlyMap[monthKey].expense += t.amount;
+      }
     });
 
     // Sort months chronologically and build result
@@ -329,7 +325,7 @@ function App() {
                 last30DaysData={last30DaysData}
                 incomeCategorySpending={incomeCategorySpending}
                 expenseCategorySpending={expenseCategorySpending}
-                monthlyExpenseByCategory={monthlyExpenseByCategory}
+                monthlyIncomeExpense={monthlyIncomeExpense}
                 balance={balance}
                 chartConfig={chartConfig}
                 colors={COLORS}
@@ -342,12 +338,11 @@ function App() {
             {activePage === "settings" && (
               <Settings
                 categories={categories}
+                transactions={transactions}
                 onAddCategory={handleCreateCategory}
                 onDeleteCategory={handleDeleteCategory}
               />
             )}
-
-            {activePage === "user" && <User />}
           </div>
 
           <TransactionDialog

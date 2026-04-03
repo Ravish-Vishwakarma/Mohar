@@ -7,4 +7,4 @@ export interface Transaction {
   type: "income" | "expense";
 }
 
-export type Page = "dashboard" | "user" | "graph" | "settings";
+export type Page = "dashboard" | "graph" | "settings";

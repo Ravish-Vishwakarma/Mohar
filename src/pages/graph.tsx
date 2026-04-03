@@ -34,7 +34,7 @@ interface GraphProps {
   last30DaysData: any[];
   incomeCategorySpending: any[];
   expenseCategorySpending: any[];
-  monthlyExpenseByCategory: any[];
+  monthlyIncomeExpense: any[];
   balance: number;
   chartConfig: any;
   colors: string[];
@@ -47,7 +47,7 @@ export function Graph({
   last30DaysData,
   incomeCategorySpending,
   expenseCategorySpending,
-  monthlyExpenseByCategory,
+  monthlyIncomeExpense,
   balance,
   chartConfig,
   colors,
@@ -62,11 +62,6 @@ export function Graph({
   const totalExpenses = expenseCategorySpending.reduce(
     (acc, curr) => acc + curr.value,
     0
-  );
-
-  // Get all unique categories for stacked bar chart
-  const allExpenseCategories = Array.from(
-    new Set(monthlyExpenseByCategory.flatMap(month => Object.keys(month).filter(key => key !== 'month')))
   );
 
   // Custom tooltip for Balance Trend Chart
@@ -130,7 +125,6 @@ export function Graph({
       <Card>
         <CardHeader>
           <CardTitle>Income vs Expenses</CardTitle>
-          <CardDescription>Daily financial flow comparison</CardDescription>
         </CardHeader>
         <CardContent className="h-[300px] w-full">
           <ChartContainer config={chartConfig} className="h-full w-full">
@@ -206,17 +200,16 @@ export function Graph({
         </CardFooter>
       </Card>
 
-      {/* Stacked Bar Chart - Monthly Expenses by Category */}
-      {monthlyExpenseByCategory.length > 0 && (
+      {/* Bar Chart - Monthly Income vs Expense */}
+      {monthlyIncomeExpense.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Monthly Expenses by Category</CardTitle>
-            <CardDescription>Category breakdown for each month</CardDescription>
+            <CardTitle>Monthly Income vs Expense</CardTitle>
           </CardHeader>
           <CardContent className="h-[300px] w-full">
             <ChartContainer config={chartConfig} className="h-full w-full">
               <BarChart
-                data={monthlyExpenseByCategory}
+                data={monthlyIncomeExpense}
                 margin={{ top: 10, left: 0, right: 10, bottom: 0 }}
               >
                 <CartesianGrid
@@ -242,28 +235,30 @@ export function Graph({
                   cursor={false}
                   content={<ChartTooltipContent indicator="dot" />}
                 />
-                {allExpenseCategories.map((category, index) => (
-                  <Bar
-                    key={category}
-                    dataKey={category}
-                    stackId="expenses"
-                    fill={colors[index % colors.length]}
-                    name={category}
-                  />
-                ))}
+                <Bar
+                  dataKey="income"
+                  fill="#10b981"
+                  name="Income"
+                  radius={[8, 8, 0, 0]}
+                />
+                <Bar
+                  dataKey="expense"
+                  fill="#ef4444"
+                  name="Expense"
+                  radius={[8, 8, 0, 0]}
+                />
               </BarChart>
             </ChartContainer>
           </CardContent>
           <CardFooter className="flex-wrap gap-2 justify-center pb-6">
-            {allExpenseCategories.map((category, index) => (
-              <div key={category} className="flex items-center gap-1 text-xs">
-                <div 
-                  className="h-2 w-2 rounded-full" 
-                  style={{ backgroundColor: colors[index % colors.length] }} 
-                />
-                <span className="text-muted-foreground">{category}</span>
-              </div>
-            ))}
+            <div className="flex items-center gap-1 text-xs">
+              <div className="h-2 w-2 rounded-full bg-[#10b981]" />
+              <span className="text-muted-foreground">Income</span>
+            </div>
+            <div className="flex items-center gap-1 text-xs">
+              <div className="h-2 w-2 rounded-full bg-[#ef4444]" />
+              <span className="text-muted-foreground">Expense</span>
+            </div>
           </CardFooter>
         </Card>
       )}
@@ -273,7 +268,6 @@ export function Graph({
         <Card className="flex flex-col">
           <CardHeader className="items-center pb-0">
             <CardTitle>Expense by Category</CardTitle>
-            <CardDescription>Distribution of your spending</CardDescription>
           </CardHeader>
           <CardContent className="flex-1 pb-0">
             <div className="h-[250px] w-full">
@@ -348,7 +342,6 @@ export function Graph({
         <Card className="flex flex-col">
           <CardHeader className="items-center pb-0">
             <CardTitle>Income by Category</CardTitle>
-            <CardDescription>Source of your earnings</CardDescription>
           </CardHeader>
           <CardContent className="flex-1 pb-0">
             <div className="h-[250px] w-full">

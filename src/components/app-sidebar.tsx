@@ -1,6 +1,5 @@
 import {
   LayoutDashboard,
-  User,
   ChartColumnBig,
   Settings,
   Wallet,
@@ -30,11 +29,6 @@ const items: { title: string; id: Page; icon: any }[] = [
     title: "Dashboard",
     id: "dashboard",
     icon: LayoutDashboard,
-  },
-  {
-    title: "User",
-    id: "user",
-    icon: User,
   },
   {
     title: "Graph",
