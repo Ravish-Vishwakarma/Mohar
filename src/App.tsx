@@ -36,9 +36,9 @@ function App() {
 
   async function fetchData() {
     try {
-      const [tResult, cResult]: [Transaction[], string[]] = await Promise.all([
-        invoke("list"),
-        invoke("get_categories"),
+      const [tResult, cResult] = await Promise.all([
+        invoke<Transaction[]>("list"),
+        invoke<string[]>("get_categories"),
       ]);
       setTransactions(tResult);
       setCategories(cResult);
@@ -159,7 +159,7 @@ function App() {
       <SidebarProvider defaultOpen={false}>
         <AppSidebar activePage={activePage} onPageChange={setActivePage} />
         <SidebarInset>
-          <div className="container mx-auto p-4 max-w-4xl min-h-screen">
+          <div className="w-full p-6 min-h-screen">
             <header className="flex h-10 shrink-0 items-center justify-between mb-6 border-b sticky top-0 bg-background/95 backdrop-blur z-10 px-4">
               <h1 className="text-sm font-semibold capitalize text-muted-foreground">
                 {activePage}
