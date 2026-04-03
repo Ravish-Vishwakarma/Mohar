@@ -1,7 +1,19 @@
 import { useEffect, useState, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { Trash2, Plus, Pencil, Wallet, Calendar as CalendarIcon, Check, ChevronsUpDown, X, TrendingUp } from "lucide-react";
-import { format, subDays, startOfDay, isAfter, parseISO } from "date-fns";
+import { 
+  Trash2, 
+  Plus, 
+  Pencil, 
+  Wallet, 
+  Calendar as CalendarIcon, 
+  Check, 
+  ChevronsUpDown, 
+  X, 
+  TrendingUp,
+  Filter,
+  RotateCcw
+} from "lucide-react";
+import { format, subDays, startOfDay, isAfter, isBefore, parseISO, endOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
 
 import { Button } from "./components/ui/button";
@@ -48,6 +60,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar, type Page } from "@/components/app-sidebar"
@@ -90,17 +103,26 @@ function App() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   
+  // Form State
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
   const [date, setDate] = useState<Date>(new Date());
   const [type, setType] = useState<"income" | "expense">("expense");
   
+  // UI State
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [searchCategory, setSearchCategory] = useState("");
   const [newCategoryName, setNewCategoryName] = useState("");
+
+  // Filter State
+  const [filterType, setFilterType] = useState<"all" | "income" | "expense">("all");
+  const [filterDateStart, setFilterDateStart] = useState<Date | undefined>(undefined);
+  const [filterDateEnd, setFilterDateEnd] = useState<Date | undefined>(undefined);
+  const [filterCategories, setFilterCategories] = useState<string[]>([]);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -195,7 +217,25 @@ function App() {
     setType("expense");
   }
 
-  const totals = transactions.reduce(
+  // --- Filtering Logic ---
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter(t => {
+      // Type filter
+      if (filterType !== "all" && t.type !== filterType) return false;
+      
+      // Category filter
+      if (filterCategories.length > 0 && !filterCategories.includes(t.category)) return false;
+      
+      // Date filter
+      const tDate = parseISO(t.date);
+      if (filterDateStart && isBefore(tDate, startOfDay(filterDateStart))) return false;
+      if (filterDateEnd && isAfter(tDate, endOfDay(filterDateEnd))) return false;
+      
+      return true;
+    });
+  }, [transactions, filterType, filterCategories, filterDateStart, filterDateEnd]);
+
+  const totals = filteredTransactions.reduce(
     (acc, t) => {
       if (t.type === "income") acc.income += t.amount;
       else acc.expenses += t.amount;
@@ -210,9 +250,6 @@ function App() {
   
   const last30DaysData = useMemo(() => {
     const today = startOfDay(new Date());
-    const thirtyDaysAgo = subDays(today, 29);
-    
-    // Create an object with all dates in the range
     const dailyMap: Record<string, { date: string; income: number; expense: number }> = {};
     for (let i = 0; i < 30; i++) {
       const d = format(subDays(today, 29 - i), "MMM d");
@@ -220,7 +257,6 @@ function App() {
       dailyMap[fullDate] = { date: d, income: 0, expense: 0 };
     }
 
-    // Fill with transaction data
     transactions.forEach(t => {
       if (dailyMap[t.date]) {
         if (t.type === "income") dailyMap[t.date].income += t.amount;
@@ -233,7 +269,7 @@ function App() {
 
   const categorySpending = useMemo(() => {
     const catMap: Record<string, number> = {};
-    transactions
+    filteredTransactions
       .filter(t => t.type === "expense")
       .forEach(t => {
         catMap[t.category] = (catMap[t.category] || 0) + t.amount;
@@ -242,22 +278,23 @@ function App() {
     return Object.entries(catMap)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value);
-  }, [transactions]);
+  }, [filteredTransactions]);
 
   const chartConfig = {
-    income: {
-      label: "Income",
-      color: "hsl(var(--primary))",
-    },
-    expense: {
-      label: "Expense",
-      color: "hsl(var(--destructive))",
-    },
+    income: { label: "Income", color: "hsl(var(--primary))" },
+    expense: { label: "Expense", color: "hsl(var(--destructive))" },
   } satisfies ChartConfig
 
   const COLORS = ['hsl(var(--primary))', 'oklch(0.627 0.265 303.9)', 'oklch(0.648 0.2 160.1)', 'oklch(0.852 0.199 91.936)', 'oklch(0.488 0.243 264.376)'];
 
-  // --- Render ---
+  const isAnyFilterActive = filterType !== "all" || filterDateStart !== undefined || filterDateEnd !== undefined || filterCategories.length > 0;
+
+  const clearFilters = () => {
+    setFilterType("all");
+    setFilterDateStart(undefined);
+    setFilterDateEnd(undefined);
+    setFilterCategories([]);
+  };
 
   return (
     <TooltipProvider>
@@ -265,8 +302,89 @@ function App() {
         <AppSidebar activePage={activePage} onPageChange={setActivePage} />
         <SidebarInset>
           <div className="container mx-auto p-4 max-w-4xl min-h-screen">
-            <header className="flex h-10 shrink-0 items-center gap-2 mb-6 border-b sticky top-0 bg-background/95 backdrop-blur z-10 px-4">
+            <header className="flex h-10 shrink-0 items-center justify-between mb-6 border-b sticky top-0 bg-background/95 backdrop-blur z-10 px-4">
               <h1 className="text-sm font-semibold capitalize text-muted-foreground">{activePage}</h1>
+              
+              {(activePage === "dashboard" || activePage === "graph") && (
+                <div className="flex items-center gap-2">
+                  {isAnyFilterActive && (
+                    <Button variant="ghost" size="sm" className="h-7 px-2 text-xs text-muted-foreground gap-1" onClick={clearFilters}>
+                      <RotateCcw className="h-3 w-3" /> Clear
+                    </Button>
+                  )}
+                  <Popover open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant={isAnyFilterActive ? "default" : "outline"} size="sm" className="h-7 px-2 text-xs gap-1">
+                        <Filter className="h-3 w-3" /> Filter
+                        {isAnyFilterActive && <span className="ml-1 rounded-full bg-background text-foreground px-1.5 py-0.5 text-[10px] font-bold">!</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80" align="end">
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <h4 className="font-medium text-sm">Type</h4>
+                          <Tabs value={filterType} onValueChange={(v) => setFilterType(v as any)}>
+                            <TabsList className="grid w-full grid-cols-3 h-8">
+                              <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
+                              <TabsTrigger value="income" className="text-xs">Income</TabsTrigger>
+                              <TabsTrigger value="expense" className="text-xs">Expense</TabsTrigger>
+                            </TabsList>
+                          </Tabs>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <h4 className="font-medium text-sm">Date Range</h4>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="outline" size="sm" className={cn("justify-start text-left font-normal text-xs", !filterDateStart && "text-muted-foreground")}>
+                                  <CalendarIcon className="mr-2 h-3 w-3" />
+                                  {filterDateStart ? format(filterDateStart, "MMM d, yyyy") : "Start"}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar mode="single" selected={filterDateStart} onSelect={setFilterDateStart} initialFocus />
+                              </PopoverContent>
+                            </Popover>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button variant="outline" size="sm" className={cn("justify-start text-left font-normal text-xs", !filterDateEnd && "text-muted-foreground")}>
+                                  <CalendarIcon className="mr-2 h-3 w-3" />
+                                  {filterDateEnd ? format(filterDateEnd, "MMM d, yyyy") : "End"}
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar mode="single" selected={filterDateEnd} onSelect={setFilterDateEnd} initialFocus />
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <h4 className="font-medium text-sm">Categories</h4>
+                          <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto pr-2">
+                            {categories.map((cat) => (
+                              <div key={cat} className="flex items-center space-x-2">
+                                <Checkbox 
+                                  id={`filter-${cat}`} 
+                                  checked={filterCategories.includes(cat)}
+                                  onCheckedChange={(checked) => {
+                                    if (checked) setFilterCategories([...filterCategories, cat]);
+                                    else setFilterCategories(filterCategories.filter(c => c !== cat));
+                                  }}
+                                />
+                                <label htmlFor={`filter-${cat}`} className="text-xs font-medium leading-none cursor-pointer">
+                                  {cat}
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
             </header>
 
             {activePage === "dashboard" && (
@@ -295,7 +413,10 @@ function App() {
                 </div>
 
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold">Recent Transactions</h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-xl font-semibold">Transactions</h2>
+                    {isAnyFilterActive && <Badge variant="outline" className="text-[10px] h-5">Filtered</Badge>}
+                  </div>
                   <Dialog open={isDialogOpen} onOpenChange={(open) => {
                     setIsDialogOpen(open);
                     if (!open) resetForm();
@@ -309,9 +430,7 @@ function App() {
                       <form onSubmit={handleSubmit}>
                         <DialogHeader>
                           <DialogTitle>{editingId ? "Edit Transaction" : "Add Transaction"}</DialogTitle>
-                          <DialogDescription>
-                            Record your income or expenses here.
-                          </DialogDescription>
+                          <DialogDescription>Record your income or expenses here.</DialogDescription>
                         </DialogHeader>
                         
                         <div className="grid gap-4 py-4">
@@ -324,79 +443,34 @@ function App() {
 
                           <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="title" className="text-right text-xs">Title</Label>
-                            <Input
-                              id="title"
-                              value={title}
-                              onChange={(e) => setTitle(e.target.value)}
-                              className="col-span-3"
-                              required
-                            />
+                            <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} className="col-span-3" required />
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="amount" className="text-right text-xs">Amount</Label>
-                            <Input
-                              id="amount"
-                              type="number"
-                              step="0.01"
-                              value={amount}
-                              onChange={(e) => setAmount(e.target.value)}
-                              className="col-span-3"
-                              required
-                            />
+                            <Input id="amount" type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className="col-span-3" required />
                           </div>
                           <div className="grid grid-cols-4 items-center gap-4">
                             <Label className="text-right text-xs">Category</Label>
                             <Popover open={categoryOpen} onOpenChange={setCategoryOpen}>
                               <PopoverTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  role="combobox"
-                                  aria-expanded={categoryOpen}
-                                  className="col-span-3 justify-between font-normal"
-                                >
+                                <Button variant="outline" role="combobox" aria-expanded={categoryOpen} className="col-span-3 justify-between font-normal">
                                   {category ? category : "Select category..."}
                                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                 </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-[280px] p-0" align="start">
                                 <Command>
-                                  <CommandInput 
-                                    placeholder="Search category..." 
-                                    value={searchCategory}
-                                    onValueChange={setSearchCategory}
-                                  />
+                                  <CommandInput placeholder="Search category..." value={searchCategory} onValueChange={setSearchCategory} />
                                   <CommandList>
                                     <CommandEmpty>
-                                      <Button 
-                                        variant="ghost" 
-                                        className="w-full justify-start gap-2 text-primary"
-                                        onClick={() => {
-                                          handleCreateCategory(searchCategory);
-                                          setCategory(searchCategory);
-                                          setSearchCategory("");
-                                          setCategoryOpen(false);
-                                        }}
-                                      >
-                                        <Plus className="h-4 w-4" />
-                                        Create "{searchCategory}"
+                                      <Button variant="ghost" className="w-full justify-start gap-2 text-primary" onClick={() => { handleCreateCategory(searchCategory); setCategory(searchCategory); setSearchCategory(""); setCategoryOpen(false); }}>
+                                        <Plus className="h-4 w-4" /> Create "{searchCategory}"
                                       </Button>
                                     </CommandEmpty>
                                     <CommandGroup>
                                       {categories.map((cat) => (
-                                        <CommandItem
-                                          key={cat}
-                                          value={cat}
-                                          onSelect={(currentValue) => {
-                                            setCategory(currentValue === category ? "" : currentValue)
-                                            setCategoryOpen(false)
-                                          }}
-                                        >
-                                          <Check
-                                            className={cn(
-                                              "mr-2 h-4 w-4",
-                                              category === cat ? "opacity-100" : "opacity-0"
-                                            )}
-                                          />
+                                        <CommandItem key={cat} value={cat} onSelect={(currentValue) => { setCategory(currentValue === category ? "" : currentValue); setCategoryOpen(false); }}>
+                                          <Check className={cn("mr-2 h-4 w-4", category === cat ? "opacity-100" : "opacity-0")} />
                                           {cat}
                                         </CommandItem>
                                       ))}
@@ -410,32 +484,19 @@ function App() {
                             <Label className="text-right text-xs">Date</Label>
                             <Popover>
                               <PopoverTrigger asChild>
-                                <Button
-                                  variant={"outline"}
-                                  className={cn(
-                                    "col-span-3 justify-start text-left font-normal",
-                                    !date && "text-muted-foreground"
-                                  )}
-                                >
+                                <Button variant={"outline"} className={cn("col-span-3 justify-start text-left font-normal", !date && "text-muted-foreground")}>
                                   <CalendarIcon className="mr-2 h-4 w-4" />
                                   {date ? format(date, "PPP") : <span>Pick a date</span>}
                                 </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0">
-                                <Calendar
-                                  mode="single"
-                                  selected={date}
-                                  onSelect={(d) => d && setDate(d)}
-                                  initialFocus
-                                />
+                                <Calendar mode="single" selected={date} onSelect={(d) => d && setDate(d)} initialFocus />
                               </PopoverContent>
                             </Popover>
                           </div>
                         </div>
                         <DialogFooter>
-                          <Button type="submit" className="w-full">
-                            {editingId ? "Update" : "Add"} {type === "income" ? "Income" : "Expense"}
-                          </Button>
+                          <Button type="submit" className="w-full">{editingId ? "Update" : "Add"} {type === "income" ? "Income" : "Expense"}</Button>
                         </DialogFooter>
                       </form>
                     </DialogContent>
@@ -455,42 +516,25 @@ function App() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {transactions.length === 0 ? (
+                        {filteredTransactions.length === 0 ? (
                           <TableRow>
                             <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                              No transactions found.
+                              {isAnyFilterActive ? "No transactions match your filters." : "No transactions found."}
                             </TableCell>
                           </TableRow>
                         ) : (
-                          transactions.map((t) => (
+                          filteredTransactions.map((t) => (
                             <TableRow key={t.id}>
-                              <TableCell className="font-medium text-nowrap">
-                                {format(new Date(t.date), "MMM d, yyyy")}
-                              </TableCell>
+                              <TableCell className="font-medium text-nowrap">{format(new Date(t.date), "MMM d, yyyy")}</TableCell>
                               <TableCell>{t.title}</TableCell>
-                              <TableCell>
-                                <Badge variant="secondary">{t.category}</Badge>
-                              </TableCell>
+                              <TableCell><Badge variant="secondary">{t.category}</Badge></TableCell>
                               <TableCell className={cn("text-right font-bold", t.type === "income" ? "text-green-600" : "text-red-600")}>
                                 {t.type === "income" ? "+" : "-"}${t.amount.toFixed(2)}
                               </TableCell>
                               <TableCell>
                                 <div className="flex justify-end gap-2">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => handleEdit(t)}
-                                  >
-                                    <Pencil className="w-4 h-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => deleteTransaction(t.id)}
-                                    className="text-destructive hover:text-destructive"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
+                                  <Button variant="ghost" size="icon" onClick={() => handleEdit(t)}><Pencil className="w-4 h-4" /></Button>
+                                  <Button variant="ghost" size="icon" onClick={() => deleteTransaction(t.id)} className="text-destructive hover:text-destructive"><Trash2 className="w-4 h-4" /></Button>
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -514,27 +558,10 @@ function App() {
                     <ChartContainer config={chartConfig} className="h-full w-full">
                       <AreaChart data={last30DaysData} margin={{ left: 12, right: 12 }}>
                         <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                        <XAxis 
-                          dataKey="date" 
-                          tickLine={false} 
-                          axisLine={false} 
-                          tickMargin={8}
-                        />
+                        <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
                         <ChartTooltip content={<ChartTooltipContent />} />
-                        <Area 
-                          type="monotone" 
-                          dataKey="income" 
-                          stroke="hsl(var(--primary))" 
-                          fill="hsl(var(--primary))" 
-                          fillOpacity={0.4} 
-                        />
-                        <Area 
-                          type="monotone" 
-                          dataKey="expense" 
-                          stroke="hsl(var(--destructive))" 
-                          fill="hsl(var(--destructive))" 
-                          fillOpacity={0.4} 
-                        />
+                        <Area type="monotone" dataKey="income" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.4} />
+                        <Area type="monotone" dataKey="expense" stroke="hsl(var(--destructive))" fill="hsl(var(--destructive))" fillOpacity={0.4} />
                       </AreaChart>
                     </ChartContainer>
                   </CardContent>
@@ -542,9 +569,7 @@ function App() {
                     <div className="flex gap-2 font-medium leading-none">
                       Your net balance is {balance >= 0 ? "positive" : "negative"} <TrendingUp className="h-4 w-4" />
                     </div>
-                    <div className="leading-none text-muted-foreground">
-                      Showing total income and expenses for the last 30 days
-                    </div>
+                    <div className="leading-none text-muted-foreground">Showing filtered results for the last 30 days</div>
                   </CardFooter>
                 </Card>
 
@@ -558,14 +583,7 @@ function App() {
                       <div className="h-[250px] w-full">
                         <ResponsiveContainer width="100%" height="100%">
                           <PieChart>
-                            <Pie
-                              data={categorySpending}
-                              dataKey="value"
-                              nameKey="name"
-                              innerRadius={60}
-                              outerRadius={80}
-                              paddingAngle={5}
-                            >
+                            <Pie data={categorySpending} dataKey="value" nameKey="name" innerRadius={60} outerRadius={80} paddingAngle={5}>
                               {categorySpending.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                               ))}
@@ -590,10 +608,7 @@ function App() {
                             <div className="flex-1 space-y-1">
                               <p className="text-sm font-medium leading-none">{cat.name}</p>
                               <div className="h-2 w-full rounded-full bg-secondary">
-                                <div 
-                                  className="h-full rounded-full bg-primary" 
-                                  style={{ width: `${(cat.value / Math.max(...categorySpending.map(v => v.value))) * 100}%`, backgroundColor: COLORS[i % COLORS.length] }} 
-                                />
+                                <div className="h-full rounded-full bg-primary" style={{ width: `${(cat.value / Math.max(...categorySpending.map(v => v.value))) * 100}%`, backgroundColor: COLORS[i % COLORS.length] }} />
                               </div>
                             </div>
                             <div className="text-sm font-medium">${cat.value.toFixed(2)}</div>
@@ -615,21 +630,8 @@ function App() {
                   </CardHeader>
                   <CardContent>
                     <div className="flex gap-2 mb-6">
-                      <Input 
-                        placeholder="Category name..." 
-                        value={newCategoryName}
-                        onChange={(e) => setNewCategoryName(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            handleCreateCategory(newCategoryName);
-                            setNewCategoryName("");
-                          }
-                        }}
-                      />
-                      <Button onClick={() => {
-                        handleCreateCategory(newCategoryName);
-                        setNewCategoryName("");
-                      }}>
+                      <Input placeholder="Category name..." value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { handleCreateCategory(newCategoryName); setNewCategoryName(""); } }} />
+                      <Button onClick={() => { handleCreateCategory(newCategoryName); setNewCategoryName(""); }}>
                         <Plus className="w-4 h-4 mr-2" /> Add
                       </Button>
                     </div>
@@ -638,13 +640,7 @@ function App() {
                       {categories.map((cat) => (
                         <Badge key={cat} variant="secondary" className="px-3 py-1 flex items-center gap-2 text-sm h-7">
                           {cat}
-                          <span 
-                            className="cursor-pointer hover:text-destructive transition-colors p-0.5" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteCategory(cat);
-                            }}
-                          >
+                          <span className="cursor-pointer hover:text-destructive transition-colors p-0.5" onClick={(e) => { e.stopPropagation(); handleDeleteCategory(cat); }}>
                             <X className="w-3 h-3" />
                           </span>
                         </Badge>
