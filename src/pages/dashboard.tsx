@@ -95,74 +95,75 @@ export function Dashboard({
         </Button>
       </div>
 
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead className="w-[100px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {transactions.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    {isAnyFilterActive
-                      ? "No transactions match your filters."
-                      : "No transactions found."}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                transactions.map((t) => (
-                  <TableRow key={t.id}>
-                    <TableCell className="font-medium text-nowrap">
-                      {format(new Date(t.date), "MMM d, yyyy")}
-                    </TableCell>
-                    <TableCell>{t.title}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{t.category}</Badge>
-                    </TableCell>
-                    <TableCell
-                      className={cn(
-                        "text-right font-bold",
-                        t.type === "income" ? "text-green-600" : "text-red-600"
-                      )}
+
+      <Table className="[&_table]:border-0">
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-12">Sr. No.</TableHead>
+            <TableHead>Title</TableHead>
+            <TableHead>Category</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead className="text-right">Amount</TableHead>
+            <TableHead className="w-[100px]"></TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {transactions.length === 0 ? (
+            <TableRow>
+              <TableCell
+                colSpan={6}
+                className="text-center py-8 text-muted-foreground"
+              >
+                {isAnyFilterActive
+                  ? "No transactions match your filters."
+                  : "No transactions found."}
+              </TableCell>
+            </TableRow>
+          ) : (
+            transactions.map((t, index) => (
+              <TableRow key={t.id}>
+                <TableCell className="text-muted-foreground text-sm py-3">
+                  {index + 1}
+                </TableCell>
+                <TableCell className="font-medium py-3">{t.title}</TableCell>
+                <TableCell className="py-3">
+                  <Badge variant="secondary">{t.category}</Badge>
+                </TableCell>
+                <TableCell className="text-nowrap py-3">
+                  {format(new Date(t.date), "MMM d, yyyy")}
+                </TableCell>
+                <TableCell
+                  className={cn(
+                    "text-right font-bold py-3",
+                    t.type === "income" ? "text-green-600" : "text-red-600"
+                  )}
+                >
+                  {t.type === "income" ? "+" : "-"}${t.amount.toFixed(2)}
+                </TableCell>
+                <TableCell className="py-3">
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onEdit(t)}
                     >
-                      {t.type === "income" ? "+" : "-"}${t.amount.toFixed(2)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onEdit(t)}
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onDelete(t.id)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onDelete(t.id)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
     </>
   );
 }

@@ -70,7 +70,7 @@ export function Graph({
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="rounded-lg border border-border bg-background p-2 shadow-md">
+        <div className="rounded-lg border border-border bg-card p-2 shadow-md">
           <p className="text-xs font-medium text-foreground">{data.date}</p>
           <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">
             ${data.balance.toFixed(2)}
@@ -189,7 +189,7 @@ export function Graph({
           <div className="flex gap-2 font-medium leading-none">
             Your current net balance is ${balance.toFixed(2)} <TrendingUp
               className={
-                balance >= 0 ? "text-green-500 h-4 w-4" : "text-red-500 h-4 w-4"
+                balance >= 0 ? "text-emerald-600 dark:text-emerald-400 h-4 w-4" : "text-red-600 dark:text-red-400 h-4 w-4"
               }
             />
           </div>

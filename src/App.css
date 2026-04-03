@@ -166,3 +166,33 @@
 .dark {
   scrollbar-color: oklch(0.556 0 0 / 40%) transparent;
 }
+
+/* Enhance cards and containers for better dark mode visibility */
+.dark {
+  color-scheme: dark;
+}
+
+html {
+  color-scheme: light dark;
+}
+
+/* Improve chart text in dark mode */
+.dark text {
+  fill: currentColor;
+}
+
+/* Enhanced shadows for dark mode */
+.dark .shadow-md {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.3);
+}
+
+/* Better contrast for inputs in dark mode */
+.dark input::placeholder {
+  color: oklch(0.708 0 0 / 0.6);
+}
+
+/* Ensure badges look good in both modes */
+.dark .badge {
+  background-color: oklch(0.269 0 0);
+  color: oklch(0.985 0 0);
+}
