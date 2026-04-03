@@ -205,3 +205,14 @@ html {
 [data-active="true"]:hover {
   @apply bg-primary text-primary-foreground;
 }
+
+/* Tauri Window Controls */
+.draggable-region {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-app-region: drag;
+}
+
+.draggable-region button {
+  -webkit-app-region: no-drag;
+}

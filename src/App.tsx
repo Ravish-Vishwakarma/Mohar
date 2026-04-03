@@ -6,6 +6,7 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
+import { WindowControls } from "@/components/window-controls";
 import { TransactionDialog } from "@/components/transaction-dialog";
 import { FilterPopover } from "@/components/filter-popover";
 
@@ -282,28 +283,38 @@ function App() {
       <SidebarProvider defaultOpen={false}>
         <AppSidebar activePage={activePage} onPageChange={setActivePage} />
         <SidebarInset>
-          <div className="w-full p-6 min-h-screen">
-            <header className="flex h-10 shrink-0 items-center justify-between mb-6 border-b sticky top-0 bg-background/95 backdrop-blur z-10 px-4">
-              <h1 className="text-sm font-semibold capitalize text-muted-foreground">
-                {activePage}
-              </h1>
+          <div className="w-full min-h-screen flex flex-col">
+            {/* Custom Title Bar */}
+            <div className="h-10 shrink-0 flex items-center justify-between px-4 border-b bg-background/95 backdrop-blur z-20 draggable-region">
+              <div className="flex-1">
+                <h1 className="text-sm font-semibold capitalize text-muted-foreground">
+                  {activePage}
+                </h1>
+              </div>
+              <WindowControls />
+            </div>
 
-              {(activePage === "dashboard" || activePage === "graph") && (
-                <FilterPopover
-                  filterType={filterType}
-                  setFilterType={setFilterType}
-                  filterDateStart={filterDateStart}
-                  setFilterDateStart={setFilterDateStart}
-                  filterDateEnd={filterDateEnd}
-                  setFilterDateEnd={setFilterDateEnd}
-                  filterCategories={filterCategories}
-                  setFilterCategories={setFilterCategories}
-                  categories={categories}
-                  isAnyFilterActive={isAnyFilterActive}
-                  onClear={clearFilters}
-                />
-              )}
-            </header>
+            {/* Main Content */}
+            <div className="flex-1 p-6">
+              <header className="flex h-10 shrink-0 items-center justify-between mb-6 border-b sticky top-0 bg-background/95 backdrop-blur z-10 px-4">
+                <div className="flex-1"></div>
+
+                {(activePage === "dashboard" || activePage === "graph") && (
+                  <FilterPopover
+                    filterType={filterType}
+                    setFilterType={setFilterType}
+                    filterDateStart={filterDateStart}
+                    setFilterDateStart={setFilterDateStart}
+                    filterDateEnd={filterDateEnd}
+                    setFilterDateEnd={setFilterDateEnd}
+                    filterCategories={filterCategories}
+                    setFilterCategories={setFilterCategories}
+                    categories={categories}
+                    isAnyFilterActive={isAnyFilterActive}
+                    onClear={clearFilters}
+                  />
+                )}
+              </header>
 
             {activePage === "dashboard" && (
               <Dashboard
@@ -336,14 +347,15 @@ function App() {
               />
             )}
 
-            {activePage === "settings" && (
-              <Settings
-                categories={categories}
-                transactions={transactions}
-                onAddCategory={handleCreateCategory}
-                onDeleteCategory={handleDeleteCategory}
-              />
-            )}
+              {activePage === "settings" && (
+                <Settings
+                  categories={categories}
+                  transactions={transactions}
+                  onAddCategory={handleCreateCategory}
+                  onDeleteCategory={handleDeleteCategory}
+                />
+              )}
+            </div>
           </div>
 
           <TransactionDialog
