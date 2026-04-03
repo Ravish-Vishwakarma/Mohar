@@ -221,8 +221,18 @@ export function Settings({
           <Button
             variant="outline"
             size="sm"
-            className="gap-2"
-            onClick={() => window.open("https://ravishvish.gumroad.com/coffee", "_blank")}
+            className="gap-2 text-pink-500 hover:text-pink-600"
+            onClick={(e) => {
+              e.preventDefault();
+              const link = document.createElement("a");
+              link.href = "https://ravishvish.gumroad.com/coffee";
+              link.target = "_blank";
+              link.rel = "noopener noreferrer";
+              link.setAttribute("data-tauri-drag-region", "");
+              document.body.appendChild(link);
+              setTimeout(() => link.click(), 0);
+              setTimeout(() => document.body.removeChild(link), 100);
+            }}
           >
             <Coffee className="w-4 h-4" />
             Buy Me Coffee
@@ -230,8 +240,18 @@ export function Settings({
           <Button
             variant="outline"
             size="sm"
-            className="gap-2"
-            onClick={() => window.open("https://ravish-vishwakarma.github.io/Ravish-Vishwakarma/", "_blank")}
+            className="gap-2 text-blue-500 hover:text-blue-600"
+            onClick={(e) => {
+              e.preventDefault();
+              const link = document.createElement("a");
+              link.href = "https://ravish-vishwakarma.github.io/Ravish-Vishwakarma/";
+              link.target = "_blank";
+              link.rel = "noopener noreferrer";
+              link.setAttribute("data-tauri-drag-region", "");
+              document.body.appendChild(link);
+              setTimeout(() => link.click(), 0);
+              setTimeout(() => document.body.removeChild(link), 100);
+            }}
           >
             <Info className="w-4 h-4" />
             More Info

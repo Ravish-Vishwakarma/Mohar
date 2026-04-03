@@ -110,8 +110,11 @@ fn get_categories(state: State<DbState>) -> Result<Vec<String>, String> {
 #[tauri::command]
 fn add_category(state: State<DbState>, name: String) -> Result<(), String> {
     let db = state.db.lock().map_err(|e| e.to_string())?;
-    db.execute("INSERT OR IGNORE INTO categories (name) VALUES (?1)", params![name])
-        .map_err(|e| e.to_string())?;
+    db.execute(
+        "INSERT OR IGNORE INTO categories (name) VALUES (?1)",
+        params![name],
+    )
+    .map_err(|e| e.to_string())?;
     Ok(())
 }
 
@@ -130,9 +133,9 @@ fn init_db(app_handle: &AppHandle) -> Result<Connection, Box<dyn std::error::Err
         .expect("failed to get app data dir");
     std::fs::create_dir_all(&app_dir)?;
     let db_path = app_dir.join("mohar.db");
-    
+
     let db = Connection::open(db_path)?;
-    
+
     // Create transactions table (replacing expenses)
     db.execute(
         "CREATE TABLE IF NOT EXISTS transactions (
@@ -156,23 +159,32 @@ fn init_db(app_handle: &AppHandle) -> Result<Connection, Box<dyn std::error::Err
     )?;
 
     // Insert some default categories
-    let default_categories = vec!["Food", "Transport", "Entertainment", "Salary", "Gift", "Other"];
+    let default_categories = vec![
+        "Food",
+        "Transport",
+        "Entertainment",
+        "Salary",
+        "Gift",
+        "Other",
+    ];
     for cat in default_categories {
-        db.execute("INSERT OR IGNORE INTO categories (name) VALUES (?1)", params![cat])?;
+        db.execute(
+            "INSERT OR IGNORE INTO categories (name) VALUES (?1)",
+            params![cat],
+        )?;
     }
-    
+
     Ok(db)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             let db = init_db(app.handle())?;
-            app.manage(DbState {
-                db: Mutex::new(db),
-            });
+            app.manage(DbState { db: Mutex::new(db) });
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
