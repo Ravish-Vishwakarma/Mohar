@@ -69,6 +69,23 @@ export function Graph({
     new Set(monthlyExpenseByCategory.flatMap(month => Object.keys(month).filter(key => key !== 'month')))
   );
 
+  // Custom tooltip for Balance Trend Chart
+  const BalanceTrendTooltip = (props: any) => {
+    const { active, payload } = props;
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="rounded-lg border border-border bg-background p-2 shadow-md">
+          <p className="text-xs font-medium text-foreground">{data.date}</p>
+          <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+            ${data.balance.toFixed(2)}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="grid gap-6">
       {/* Range Selector */}
@@ -95,7 +112,7 @@ export function Graph({
               />
               <ChartTooltip
                 cursor={true}
-                content={<ChartTooltipContent hideLabel />}
+                content={<BalanceTrendTooltip />}
               />
               <Line
                 type="monotone"
