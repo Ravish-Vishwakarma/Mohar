@@ -8,7 +8,8 @@
       "update",
       "delete",
       "get_categories",
-      "add_category"
+      "add_category",
+      "delete_category"
     ]
   }
 }

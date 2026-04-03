@@ -3,8 +3,6 @@ import {
   User,
   ChartColumnBig,
   Settings,
-  ChevronRight,
-  ChevronLeft,
   Wallet
 } from "lucide-react"
 
@@ -23,30 +21,37 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
-const items = [
+export type Page = "dashboard" | "user" | "graph" | "settings"
+
+const items: { title: string; id: Page; icon: any }[] = [
   {
     title: "Dashboard",
-    url: "#",
+    id: "dashboard",
     icon: LayoutDashboard,
   },
   {
     title: "User",
-    url: "#",
+    id: "user",
     icon: User,
   },
   {
     title: "Graph",
-    url: "#",
+    id: "graph",
     icon: ChartColumnBig,
   },
   {
     title: "Settings",
-    url: "#",
+    id: "settings",
     icon: Settings,
   },
 ]
 
-export function AppSidebar() {
+interface AppSidebarProps {
+  activePage: Page
+  onPageChange: (page: Page) => void
+}
+
+export function AppSidebar({ activePage, onPageChange }: AppSidebarProps) {
   const { state } = useSidebar()
 
   return (
@@ -67,12 +72,14 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild tooltip={item.title}>
-                    <a href={item.url}>
-                      <item.icon className="size-4" />
-                      <span>{item.title}</span>
-                    </a>
+                <SidebarMenuItem key={item.id}>
+                  <SidebarMenuButton 
+                    tooltip={item.title} 
+                    isActive={activePage === item.id}
+                    onClick={() => onPageChange(item.id)}
+                  >
+                    <item.icon className="size-4" />
+                    <span>{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

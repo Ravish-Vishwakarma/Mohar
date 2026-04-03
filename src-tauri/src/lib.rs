@@ -115,6 +115,14 @@ fn add_category(state: State<DbState>, name: String) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+fn delete_category(state: State<DbState>, name: String) -> Result<(), String> {
+    let db = state.db.lock().map_err(|e| e.to_string())?;
+    db.execute("DELETE FROM categories WHERE name = ?1", params![name])
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 fn init_db(app_handle: &AppHandle) -> Result<Connection, Box<dyn std::error::Error>> {
     let app_dir = app_handle
         .path()
@@ -173,7 +181,8 @@ pub fn run() {
             update,
             delete,
             get_categories,
-            add_category
+            add_category,
+            delete_category
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
