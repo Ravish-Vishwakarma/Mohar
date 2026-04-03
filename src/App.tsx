@@ -232,6 +232,40 @@ function App() {
       .sort((a, b) => b.value - a.value);
   }, [filteredTransactions]);
 
+  const monthlyExpenseByCategory = useMemo(() => {
+    const monthlyMap: Record<string, Record<string, number>> = {};
+    
+    filteredTransactions
+      .filter((t) => t.type === "expense")
+      .forEach((t) => {
+        const date = parseISO(t.date);
+        const monthKey = format(date, "MMM yyyy");
+        
+        if (!monthlyMap[monthKey]) {
+          monthlyMap[monthKey] = {};
+        }
+        monthlyMap[monthKey][t.category] = (monthlyMap[monthKey][t.category] || 0) + t.amount;
+      });
+
+    // Get all unique categories
+    const allCategories = new Set<string>();
+    Object.values(monthlyMap).forEach(month => {
+      Object.keys(month).forEach(cat => allCategories.add(cat));
+    });
+
+    // Sort months chronologically and build result
+    const sortedMonths = Object.keys(monthlyMap).sort((a, b) => {
+      const dateA = parseISO(a + " 1");
+      const dateB = parseISO(b + " 1");
+      return dateA.getTime() - dateB.getTime();
+    });
+
+    return sortedMonths.map(month => ({
+      month,
+      ...monthlyMap[month],
+    }));
+  }, [filteredTransactions]);
+
   const chartConfig = {
     income: { label: "Income", color: "#10b981" }, // Emerald 500
     expense: { label: "Expense", color: "#ef4444" }, // Red 500
@@ -295,6 +329,7 @@ function App() {
                 last30DaysData={last30DaysData}
                 incomeCategorySpending={incomeCategorySpending}
                 expenseCategorySpending={expenseCategorySpending}
+                monthlyExpenseByCategory={monthlyExpenseByCategory}
                 balance={balance}
                 chartConfig={chartConfig}
                 colors={COLORS}

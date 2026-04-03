@@ -8,6 +8,8 @@ import {
   Area,
   LineChart,
   Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -32,6 +34,7 @@ interface GraphProps {
   last30DaysData: any[];
   incomeCategorySpending: any[];
   expenseCategorySpending: any[];
+  monthlyExpenseByCategory: any[];
   balance: number;
   chartConfig: any;
   colors: string[];
@@ -44,6 +47,7 @@ export function Graph({
   last30DaysData,
   incomeCategorySpending,
   expenseCategorySpending,
+  monthlyExpenseByCategory,
   balance,
   chartConfig,
   colors,
@@ -58,6 +62,11 @@ export function Graph({
   const totalExpenses = expenseCategorySpending.reduce(
     (acc, curr) => acc + curr.value,
     0
+  );
+
+  // Get all unique categories for stacked bar chart
+  const allExpenseCategories = Array.from(
+    new Set(monthlyExpenseByCategory.flatMap(month => Object.keys(month).filter(key => key !== 'month')))
   );
 
   return (
@@ -179,6 +188,68 @@ export function Graph({
           </div>
         </CardFooter>
       </Card>
+
+      {/* Stacked Bar Chart - Monthly Expenses by Category */}
+      {monthlyExpenseByCategory.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Monthly Expenses by Category</CardTitle>
+            <CardDescription>Category breakdown for each month</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[300px] w-full">
+            <ChartContainer config={chartConfig} className="h-full w-full">
+              <BarChart
+                data={monthlyExpenseByCategory}
+                margin={{ top: 10, left: 0, right: 10, bottom: 0 }}
+              >
+                <CartesianGrid
+                  vertical={false}
+                  strokeDasharray="3 3"
+                  opacity={0.5}
+                />
+                <XAxis
+                  dataKey="month"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  fontSize={12}
+                />
+                <YAxis
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  fontSize={12}
+                  tickFormatter={(value) => `$${value}`}
+                />
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent indicator="dot" />}
+                />
+                {allExpenseCategories.map((category, index) => (
+                  <Bar
+                    key={category}
+                    dataKey={category}
+                    stackId="expenses"
+                    fill={colors[index % colors.length]}
+                    name={category}
+                  />
+                ))}
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
+          <CardFooter className="flex-wrap gap-2 justify-center pb-6">
+            {allExpenseCategories.map((category, index) => (
+              <div key={category} className="flex items-center gap-1 text-xs">
+                <div 
+                  className="h-2 w-2 rounded-full" 
+                  style={{ backgroundColor: colors[index % colors.length] }} 
+                />
+                <span className="text-muted-foreground">{category}</span>
+              </div>
+            ))}
+          </CardFooter>
+        </Card>
+      )}
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Expense Category Donut */}
