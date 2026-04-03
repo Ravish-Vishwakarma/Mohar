@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { Trash2, Plus, Pencil, Wallet, Calendar as CalendarIcon, Check, ChevronsUpDown, X } from "lucide-react";
-import { format } from "date-fns";
+import { Trash2, Plus, Pencil, Wallet, Calendar as CalendarIcon, Check, ChevronsUpDown, X, TrendingUp } from "lucide-react";
+import { format, subDays, startOfDay, isAfter, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 
 import { Button } from "./components/ui/button";
@@ -18,6 +18,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "./components/ui/card";
@@ -51,6 +52,29 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar, type Page } from "@/components/app-sidebar"
 import { TooltipProvider } from "@/components/ui/tooltip"
+
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line,
+  AreaChart,
+  Area
+} from "recharts"
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart"
 
 interface Transaction {
   id: number;
@@ -137,7 +161,7 @@ function App() {
     if (!name) return;
     try {
       await invoke("add_category", { name });
-      fetchData(); // Refresh categories
+      fetchData();
     } catch (error) {
       console.error("Failed to create category:", error);
     }
@@ -181,6 +205,59 @@ function App() {
   );
 
   const balance = totals.income - totals.expenses;
+
+  // --- Chart Data Processing ---
+  
+  const last30DaysData = useMemo(() => {
+    const today = startOfDay(new Date());
+    const thirtyDaysAgo = subDays(today, 29);
+    
+    // Create an object with all dates in the range
+    const dailyMap: Record<string, { date: string; income: number; expense: number }> = {};
+    for (let i = 0; i < 30; i++) {
+      const d = format(subDays(today, 29 - i), "MMM d");
+      const fullDate = format(subDays(today, 29 - i), "yyyy-MM-dd");
+      dailyMap[fullDate] = { date: d, income: 0, expense: 0 };
+    }
+
+    // Fill with transaction data
+    transactions.forEach(t => {
+      if (dailyMap[t.date]) {
+        if (t.type === "income") dailyMap[t.date].income += t.amount;
+        else dailyMap[t.date].expense += t.amount;
+      }
+    });
+
+    return Object.values(dailyMap);
+  }, [transactions]);
+
+  const categorySpending = useMemo(() => {
+    const catMap: Record<string, number> = {};
+    transactions
+      .filter(t => t.type === "expense")
+      .forEach(t => {
+        catMap[t.category] = (catMap[t.category] || 0) + t.amount;
+      });
+
+    return Object.entries(catMap)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
+  }, [transactions]);
+
+  const chartConfig = {
+    income: {
+      label: "Income",
+      color: "hsl(var(--primary))",
+    },
+    expense: {
+      label: "Expense",
+      color: "hsl(var(--destructive))",
+    },
+  } satisfies ChartConfig
+
+  const COLORS = ['hsl(var(--primary))', 'oklch(0.627 0.265 303.9)', 'oklch(0.648 0.2 160.1)', 'oklch(0.852 0.199 91.936)', 'oklch(0.488 0.243 264.376)'];
+
+  // --- Render ---
 
   return (
     <TooltipProvider>
@@ -426,6 +503,109 @@ function App() {
               </>
             )}
 
+            {activePage === "graph" && (
+              <div className="grid gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Income vs Expenses</CardTitle>
+                    <CardDescription>Daily overview of the last 30 days.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="h-[300px] w-full">
+                    <ChartContainer config={chartConfig} className="h-full w-full">
+                      <AreaChart data={last30DaysData} margin={{ left: 12, right: 12 }}>
+                        <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                        <XAxis 
+                          dataKey="date" 
+                          tickLine={false} 
+                          axisLine={false} 
+                          tickMargin={8}
+                        />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Area 
+                          type="monotone" 
+                          dataKey="income" 
+                          stroke="hsl(var(--primary))" 
+                          fill="hsl(var(--primary))" 
+                          fillOpacity={0.4} 
+                        />
+                        <Area 
+                          type="monotone" 
+                          dataKey="expense" 
+                          stroke="hsl(var(--destructive))" 
+                          fill="hsl(var(--destructive))" 
+                          fillOpacity={0.4} 
+                        />
+                      </AreaChart>
+                    </ChartContainer>
+                  </CardContent>
+                  <CardFooter className="flex-col items-start gap-2 text-sm">
+                    <div className="flex gap-2 font-medium leading-none">
+                      Your net balance is {balance >= 0 ? "positive" : "negative"} <TrendingUp className="h-4 w-4" />
+                    </div>
+                    <div className="leading-none text-muted-foreground">
+                      Showing total income and expenses for the last 30 days
+                    </div>
+                  </CardFooter>
+                </Card>
+
+                <div className="grid md:grid-cols-2 gap-6">
+                  <Card className="flex flex-col">
+                    <CardHeader className="items-center pb-0">
+                      <CardTitle>Category Spending</CardTitle>
+                      <CardDescription>Expense distribution by category</CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex-1 pb-0">
+                      <div className="h-[250px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={categorySpending}
+                              dataKey="value"
+                              nameKey="name"
+                              innerRadius={60}
+                              outerRadius={80}
+                              paddingAngle={5}
+                            >
+                              {categorySpending.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Top Expenses</CardTitle>
+                      <CardDescription>Highest spending categories</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {categorySpending.slice(0, 5).map((cat, i) => (
+                          <div key={cat.name} className="flex items-center gap-4">
+                            <div className="h-2 w-2 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                            <div className="flex-1 space-y-1">
+                              <p className="text-sm font-medium leading-none">{cat.name}</p>
+                              <div className="h-2 w-full rounded-full bg-secondary">
+                                <div 
+                                  className="h-full rounded-full bg-primary" 
+                                  style={{ width: `${(cat.value / Math.max(...categorySpending.map(v => v.value))) * 100}%`, backgroundColor: COLORS[i % COLORS.length] }} 
+                                />
+                              </div>
+                            </div>
+                            <div className="text-sm font-medium">${cat.value.toFixed(2)}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            )}
+
             {activePage === "settings" && (
               <div className="space-y-6">
                 <Card>
@@ -475,7 +655,7 @@ function App() {
               </div>
             )}
 
-            {(activePage === "user" || activePage === "graph") && (
+            {activePage === "user" && (
               <div className="flex flex-col items-center justify-center h-[50vh] text-muted-foreground">
                 <p>This page is coming soon!</p>
               </div>
