@@ -5,6 +5,7 @@ import { format, subDays, startOfDay, isAfter, isBefore, parseISO, endOfDay, sub
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/toaster";
 import { TransactionDialog } from "@/components/transaction-dialog";
 import { FilterPopover } from "@/components/filter-popover";
 
@@ -355,6 +356,7 @@ function App() {
           />
         </SidebarInset>
       </SidebarProvider>
+      <Toaster />
     </TooltipProvider>
   );
 }

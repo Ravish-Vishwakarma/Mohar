@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Plus, X, Download } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 import {
   Card,
   CardContent,
@@ -34,6 +35,7 @@ export function Settings({
 }: SettingsProps) {
   const [newCategoryName, setNewCategoryName] = useState("");
   const { currency, setCurrency } = useCurrency();
+  const { toast } = useToast();
 
   const handleAdd = () => {
     if (newCategoryName.trim()) {
@@ -44,7 +46,11 @@ export function Settings({
 
   const handleExportCSV = () => {
     if (transactions.length === 0) {
-      alert("No transactions to export");
+      toast({
+        title: "No transactions",
+        description: "There are no transactions to export.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -71,7 +77,7 @@ export function Settings({
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
-    
+
     const fileName = `mohar_transactions_${new Date().toISOString().split('T')[0]}.csv`;
     link.setAttribute("href", url);
     link.setAttribute("download", fileName);
@@ -80,6 +86,11 @@ export function Settings({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+
+    toast({
+      title: "Export successful!",
+      description: "Check your Downloads folder for the CSV file.",
+    });
   };
 
   return (
