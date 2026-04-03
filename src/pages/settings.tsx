@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, X, Download, Loader2 } from "lucide-react";
+import { Plus, X, Download, Loader2, Coffee, Info } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Card,
@@ -62,7 +62,7 @@ export function Settings({
 
     // CSV headers
     const headers = ["ID", "Title", "Amount", "Category", "Date", "Type"];
-    
+
     // CSV rows
     const rows = transactions.map(t => [
       t.id,
@@ -88,7 +88,7 @@ export function Settings({
     link.setAttribute("href", url);
     link.setAttribute("download", fileName);
     link.style.visibility = "hidden";
-    
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -145,8 +145,8 @@ export function Settings({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button 
-            onClick={handleExportCSV} 
+          <Button
+            onClick={handleExportCSV}
             className="gap-2"
             disabled={isExporting}
           >
@@ -211,6 +211,33 @@ export function Settings({
           </div>
         </CardContent>
       </Card>
+
+      {/* Footer */}
+      <div className="flex flex-col items-center gap-4 pt-8 pb-4 border-t">
+        <p className="text-sm text-muted-foreground text-center">
+          Made with <span className="text-red-600 dark:text-red-400">❤️</span> by Ravish Vishwakarma
+        </p>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => window.open("https://ravishvish.gumroad.com/coffee", "_blank")}
+          >
+            <Coffee className="w-4 h-4" />
+            Buy Me Coffee
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => window.open("https://ravish-vishwakarma.github.io/Ravish-Vishwakarma/", "_blank")}
+          >
+            <Info className="w-4 h-4" />
+            More Info
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

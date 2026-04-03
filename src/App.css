@@ -176,6 +176,22 @@ html {
   color-scheme: light dark;
 }
 
+/* Disable right-click context menu */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+body * {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Prevent context menu */
+* {
+  -webkit-touch-callout: none;
+}
+
 /* Improve chart text in dark mode */
 .dark text {
   fill: currentColor;
