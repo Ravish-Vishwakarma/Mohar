@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "mohar",
+  "productName": "Mohar",
   "version": "0.1.0",
   "identifier": "com.ramdeenpc.mohar",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "mohar",
+        "title": "Mohar",
         "width": 1200,
         "height": 800,
         "decorations": false
