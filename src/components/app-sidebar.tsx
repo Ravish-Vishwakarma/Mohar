@@ -2,10 +2,10 @@ import {
   LayoutDashboard,
   ChartColumnBig,
   Settings,
-  Wallet,
   Sun,
   Moon
 } from "lucide-react"
+import appIcon from "@/assets/icon.png"
 
 import {
   Sidebar,
@@ -55,8 +55,8 @@ export function AppSidebar({ activePage, onPageChange }: AppSidebarProps) {
     <Sidebar collapsible="icon">
       <SidebarHeader className="h-16 flex items-center justify-center">
         <div className="flex items-center gap-2 px-2 w-full group-data-[collapsible=icon]:justify-center">
-          <div className="flex aspect-square size-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-            <Wallet className="size-4" />
+          <div className="flex aspect-square size-8 shrink-0 items-center justify-center rounded-lg overflow-hidden">
+            <img src={appIcon} alt="Mohar Logo" className="size-full object-cover" />
           </div>
           {state === "expanded" && (
             <span className="truncate font-bold text-lg">Mohar</span>
